@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+/* Brand + motion tokens for Tailwind v4 (@tailwindcss/postcss scans this file). */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translate3d(0, 110%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes typDot {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pring {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes scan {
+  0%,
+  100% {
+    transform: translateX(-25%);
+  }
+  50% {
+    transform: translateX(25%);
+  }
+}
+
+@theme {
+  /* Colors → bg-brand-*, text-brand-*, etc. */
+  --color-brand-bg: #f7f8fc;
+  --color-brand-surface: #ffffff;
+  --color-brand-panel: #f1f3fb;
+  --color-brand-panel-2: #e9ecf8;
+  --color-brand-violet: #a78bfa;
+  --color-brand-violet-2: #c4b5fd;
+  --color-brand-violet-deep: #7c3aed;
+  --color-brand-text: #171a2b;
+  --color-brand-green: #4ade80;
+  --color-brand-red: #f87171;
+  --color-brand-amber: #fbbf24;
+
+  /* Fonts (Next injects CSS variables on <body>) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+
+  /* Shadows → shadow-phone, shadow-card-glow, shadow-browser */
+  --shadow-card-glow:
+    0 28px 70px -36px rgba(124, 58, 237, 0.22), 0 0 0 1px rgba(23, 26, 43, 0.07);
+  --shadow-phone: 0 28px 64px -30px rgba(23, 26, 43, 0.22), 0 0 0 1px rgba(167, 139, 250, 0.12);
+  --shadow-browser: 0 30px 72px -34px rgba(23, 26, 43, 0.2);
+
+  /* Background images → bg-hero-device, bg-browser-body */
+  --background-image-hero-device:
+    radial-gradient(ellipse at 50% 30%, rgba(167, 139, 250, 0.4) 0%, transparent 45%),
+    radial-gradient(ellipse at 20% 80%, rgba(124, 58, 237, 0.35) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 60%, rgba(236, 72, 153, 0.18) 0%, transparent 50%);
+  --background-image-browser-body:
+    radial-gradient(ellipse at 40% 40%, rgba(167, 139, 250, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 75% 70%, rgba(124, 58, 237, 0.16) 0%, transparent 50%),
+    linear-gradient(160deg, #ffffff 0%, #eef1fa 70%);
+
+  /* Animations → animate-rise, animate-marquee, … */
+  --animate-rise: rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-dot: pulseDot 2s infinite;
+  --animate-typ-d1: typDot 1.2s 0s infinite;
+  --animate-typ-d2: typDot 1.2s 0.18s infinite;
+  --animate-typ-d3: typDot 1.2s 0.36s infinite;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-pring: pring 3s infinite;
+  --animate-pring-delay: pring 3s 0.6s infinite;
+  --animate-hotspot-ring: pring 2.5s infinite;
+  --animate-scanline: scan 5s ease-in-out infinite;
+}
+
+/* Accessible defaults (Preflight handles most resets) */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgba(124, 58, 237, 0.09), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(59, 130, 246, 0.07), transparent 50%),
+    linear-gradient(180deg, #fbfcff 0%, #f7f8fc 50%, #f4f6fb 100%);
+}
+
+.hero-word-mask {
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.hero-fade-d1 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.1s forwards;
+}
+
+.hero-fade-d2 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1.15s forwards;
+}
+
+.hero-fade-d3 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1.3s forwards;
+}
+
+.hero-fade-d4 {
+  opacity: 0;
+  animation: fadeUp 1s ease 1.5s forwards;
+}
+
+.hero-fade-d5 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1.8s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  /* Hero: kill entrance motion but keep fully visible final state */
+  .hero-word-mask {
+    overflow: visible !important;
+  }
+  .hero-word-rise,
+  .hero-fade-d1,
+  .hero-fade-d2,
+  .hero-fade-d3,
+  .hero-fade-d4,
+  .hero-fade-d5 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
