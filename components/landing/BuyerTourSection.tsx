@@ -37,7 +37,9 @@ export default function BuyerTourSection() {
   const lastProjectedSignatureRef = useRef("");
   const initializedRef = useRef(false);
   const runningRef = useRef(false);
+  const visibleRef = useRef(false);
 
+  const [sceneReady, setSceneReady] = useState(false);
   const [currentRoomIdx, setCurrentRoomIdx] = useState(0);
   const [orbitMode, setOrbitMode] = useState(true);
   const [visitSeconds, setVisitSeconds] = useState(0);
@@ -184,6 +186,8 @@ export default function BuyerTourSection() {
     const canvas = canvasRef.current;
 
     let cleanupScene: (() => void) | null = null;
+  let aborted = false;
+  let cancelInit: (() => void) | null = null;
 
     const loop = () => {
       const renderer = rendererRef.current;
@@ -292,7 +296,11 @@ export default function BuyerTourSection() {
       ground.receiveShadow = true;
       scene.add(ground);
 
-      ROOMS.forEach((room) => {
+      // Build rooms one per event-loop tick — keeps main thread free between each
+      void (async () => {
+      for (const room of ROOMS) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        if (aborted) return;
         const group = new THREE.Group();
         group.userData.roomId = room.id;
         const roomShell = new THREE.Group();
@@ -429,7 +437,7 @@ export default function BuyerTourSection() {
           });
           addFurniture(
             new THREE.BoxGeometry(2.8, 6, 2.8),
-            "metal",
+            "stone",
             room.bounds.x + room.bounds.w - 1.8,
             3,
             room.bounds.z + 1.5
@@ -561,7 +569,17 @@ export default function BuyerTourSection() {
         room.hotspots.forEach((hotspot, idx) => {
           hotspotsRef.current.push({ id: `${room.id}-${idx}`, roomId: room.id, hotspot });
         });
-      });
+      }
+      if (!aborted) {
+        setRoom(0);
+        setSceneReady(true);
+        // If the section is already in view by the time rooms finish loading, start the RAF
+        if (visibleRef.current && !runningRef.current) {
+          runningRef.current = true;
+          frameRef.current = requestAnimationFrame(loop);
+        }
+      }
+      })();
 
       const onResize = () => {
         if (!rootRef.current || !cameraRef.current || !rendererRef.current) return;
@@ -616,34 +634,54 @@ export default function BuyerTourSection() {
       };
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            if (!initializedRef.current) {
-              cleanupScene = initScene();
-              initializedRef.current = true;
-              setRoom(0);
-            }
-            if (!runningRef.current) {
-              runningRef.current = true;
-              frameRef.current = requestAnimationFrame(loop);
-            }
+    // Fires when the section is 1500px away — starts Three.js init before user arrives.
+    // requestIdleCallback ensures the GPU work runs between scroll frames, not during them.
+    const preloadObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !initializedRef.current) {
+          initializedRef.current = true;
+          if (typeof requestIdleCallback === "function") {
+            const id = requestIdleCallback(
+              () => { if (!aborted) cleanupScene = initScene(); },
+              { timeout: 1200 }
+            );
+            cancelInit = () => cancelIdleCallback(id);
           } else {
-            if (runningRef.current) {
-              cancelAnimationFrame(frameRef.current);
-              runningRef.current = false;
-            }
+            const id = setTimeout(() => { if (!aborted) cleanupScene = initScene(); }, 0);
+            cancelInit = () => clearTimeout(id);
           }
-        });
+        }
+      },
+      { rootMargin: "1500px" }
+    );
+
+    // Pauses/resumes the RAF loop when the section enters or leaves the viewport.
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          if (rendererRef.current && !runningRef.current) {
+            runningRef.current = true;
+            frameRef.current = requestAnimationFrame(loop);
+          }
+        } else {
+          if (runningRef.current) {
+            cancelAnimationFrame(frameRef.current);
+            runningRef.current = false;
+          }
+        }
       },
       { threshold: 0 }
     );
 
-    observer.observe(root);
+    preloadObserver.observe(root);
+    visibilityObserver.observe(root);
 
     return () => {
-      observer.disconnect();
+      aborted = true;
+      cancelInit?.();
+      preloadObserver.disconnect();
+      visibilityObserver.disconnect();
       cancelAnimationFrame(frameRef.current);
       runningRef.current = false;
       cleanupScene?.();
@@ -735,7 +773,19 @@ export default function BuyerTourSection() {
   return (
     <section className={`${styles.wrapper} relative`} id="buyer-tour">
       <div className={styles.tourRoot} ref={rootRef}>
-        <canvas className={styles.canvas} ref={canvasRef} />
+        <canvas
+          className={styles.canvas}
+          ref={canvasRef}
+          style={{ opacity: sceneReady ? 1 : 0, transition: "opacity 0.5s ease" }}
+        />
+
+        {!sceneReady && (
+          <div className={styles.sceneLoader}>
+            <span className={styles.sceneLoaderDot} />
+            <span className={styles.sceneLoaderDot} />
+            <span className={styles.sceneLoaderDot} />
+          </div>
+        )}
 
         <BuyerTourHUD
           aiOpen={aiOpen}

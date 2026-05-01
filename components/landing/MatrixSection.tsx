@@ -1,34 +1,12 @@
-type Status = "yes" | "no" | "partial";
+type Status = "yes" | "no";
 
 function StatusIcon({ status }: { status: Status }) {
   if (status === "yes") {
-    return (
-      <span
-        className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-base font-semibold text-emerald-600 ring-1 ring-emerald-600/15"
-        title="Included"
-      >
-        ✓
-      </span>
-    );
+    return <span className="material-symbols-outlined text-2xl font-bold text-green-500">check</span>;
   }
   if (status === "no") {
-    return (
-      <span
-        className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-base font-semibold text-rose-500 ring-1 ring-rose-500/15"
-        title="Not included"
-      >
-        ✕
-      </span>
-    );
+    return <span className="material-symbols-outlined text-2xl font-bold text-red-400">close</span>;
   }
-  return (
-    <span
-      className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-base font-semibold text-amber-600 ring-1 ring-amber-500/20"
-      title="Partial"
-    >
-      ◐
-    </span>
-  );
 }
 
 const MATRIX_ROWS: Array<
@@ -38,7 +16,6 @@ const MATRIX_ROWS: Array<
       synergy: string;
       matterport: string;
       zillow: string;
-      sphere: string;
     }
   | {
       feature: string;
@@ -46,147 +23,101 @@ const MATRIX_ROWS: Array<
       synergy: Status;
       matterport: Status;
       zillow: Status;
-      sphere: Status;
     }
 > = [
   {
-    feature: "Capture Time",
+    feature: "Hardware Required",
     kind: "text",
-    synergy: "15–20 Mins",
-    matterport: "2–4 Hours",
-    zillow: "30–60 Mins",
-    sphere: "~20 Mins",
+    synergy: "Smartphone Only",
+    matterport: "$3k+ Camera",
+    zillow: "Smartphone",
   },
   {
-    feature: "Hardware Cost",
-    kind: "text",
-    synergy: "$0 (iPhone)",
-    matterport: "$3,500+",
-    zillow: "$300 (Ricoh)",
-    sphere: "$0 (iPhone)",
-  },
-  {
-    feature: "AI Property Q&A",
+    feature: "AI Q&A Agent",
     kind: "status",
     synergy: "yes",
     matterport: "no",
     zillow: "no",
-    sphere: "partial",
   },
   {
-    feature: "Interactive Design Mode",
-    kind: "status",
-    synergy: "yes",
-    matterport: "no",
-    zillow: "no",
-    sphere: "partial",
-  },
-  {
-    feature: "Buyer Friction",
+    feature: "Virtual Staging",
     kind: "text",
-    synergy: "Zero (Web-link)",
-    matterport: "High (Loading)",
-    zillow: "Medium (Zillow App)",
-    sphere: "Low (Web-link)",
+    synergy: "yes",
+    matterport: "Expensive Add-on",
+    zillow: "no",
+  },
+  {
+    feature: "Processing Time",
+    kind: "text",
+    synergy: "< 15 mins",
+    matterport: "24-48 hours",
+    zillow: "Hours",
+  },
+  {
+    feature: "Platform Fee",
+    kind: "text",
+    synergy: "$0 (Flat subscription)",
+    matterport: "Per-model hosting fees",
+    zillow: "Free (but limited use)",
   },
 ];
 
 export default function MatrixSection() {
   return (
-    <section id="compare" className="scroll-mt-28 px-6 py-[120px] md:px-12">
-      <div className="mx-auto max-w-[1200px]">
-        <header className="mb-12 text-center">
-          <h2 className="mb-4 font-serif text-[clamp(30px,4vw,44px)] font-bold tracking-[-0.02em] text-[#191c1e]">
-            Full Competitive Matrix
-          </h2>
-          <p className="mx-auto max-w-[640px] text-[17px] leading-relaxed text-[#4a4456]">
-            We audited every major player in 3D real-estate tooling. Every one is missing at least two of our five differentiators. Most are missing three or four.
-          </p>
+    <section id="compare" className="scroll-mt-28 border-y border-surface-variant bg-surface-container-low py-section-padding">
+      <div className="mx-auto max-w-7xl px-6">
+        <header className="mb-16 text-center">
+          <h2 className="font-display text-4xl font-bold tracking-tight text-on-background md:text-5xl">How we stack up</h2>
         </header>
 
-        <div className="relative rounded-2xl border border-[#E9E4FF] bg-[#fafafa] p-1 shadow-[0px_12px_40px_-12px_rgba(101,0,225,0.12)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6500e1]/25 to-transparent" />
-          <div className="relative overflow-x-auto rounded-[14px]">
-            <table className="w-full min-w-[720px] border-separate border-spacing-0">
-              <thead>
-                <tr>
-                  <th
-                    scope="col"
-                    className="sticky left-0 z-20 whitespace-nowrap border-b border-[#E9E4FF] bg-white px-4 py-5 text-left font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4a4456] sm:px-6 md:rounded-tl-xl md:px-8"
-                  >
-                    Feature
-                  </th>
-                  <th
-                    scope="col"
-                    className="border-b border-[#6500e1]/25 bg-[#6500e1]/[0.09] px-4 py-5 text-left font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6500e1] sm:px-6 md:px-8"
-                  >
-                    SynergySo
-                  </th>
-                  <th
-                    scope="col"
-                    className="border-b border-[#E9E4FF] bg-white px-4 py-5 text-left font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4a4456] sm:px-6 md:px-8"
-                  >
-                    Matterport
-                  </th>
-                  <th
-                    scope="col"
-                    className="border-b border-[#E9E4FF] bg-white px-4 py-5 text-left font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4a4456] sm:px-6 md:px-8"
-                  >
-                    Zillow 3D Home
-                  </th>
-                  <th
-                    scope="col"
-                    className="border-b border-[#E9E4FF] bg-white px-4 py-5 text-left font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#4a4456] sm:px-6 md:rounded-tr-xl md:px-8"
-                  >
-                    Sphere.app
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-[14px]">
-                {MATRIX_ROWS.map((row, i) => {
-                  const isLast = i === MATRIX_ROWS.length - 1;
-                  const bottomRadius = isLast ? "md:rounded-bl-xl md:rounded-br-xl" : "";
-                  return (
-                    <tr key={row.feature} className="group transition-colors hover:bg-[#6500e1]/[0.03]">
-                      <th
-                        scope="row"
-                        className={`sticky left-0 z-10 border-b border-[#E9E4FF] bg-white px-4 py-5 text-left font-semibold text-[#191c1e] shadow-[4px_0_12px_-8px_rgba(0,0,0,0.06)] group-hover:bg-[#fafafa] sm:px-6 md:px-8 ${isLast ? "md:rounded-bl-xl border-b-0" : ""}`}
-                      >
-                        {row.feature}
-                      </th>
-                      <td
-                        className={`border-b border-[#6500e1]/15 bg-[#6500e1]/[0.06] px-4 py-5 font-semibold text-[#6500e1] sm:px-6 md:px-8 ${isLast ? "border-b-0 md:rounded-br-none" : ""}`}
-                      >
-                        {row.kind === "text" ? (
-                          row.synergy
+        <div className="overflow-x-auto rounded-2xl border border-surface-variant bg-white shadow-sm">
+          <table className="w-full min-w-[800px] border-collapse text-left">
+            <thead>
+              <tr className="border-b-2 border-surface-variant bg-surface-container-lowest">
+                <th className="w-1/4 rounded-tl-2xl px-6 py-5 font-display text-lg font-semibold text-on-background">Feature</th>
+                <th className="w-1/4 border-x border-primary/10 bg-primary/5 px-6 py-5 font-display text-lg font-semibold text-primary">SynergySo</th>
+                <th className="w-1/4 px-6 py-5 font-display text-lg font-semibold text-on-surface-variant">Matterport</th>
+                <th className="w-1/4 rounded-tr-2xl px-6 py-5 font-display text-lg font-semibold text-on-surface-variant">Zillow 3D</th>
+              </tr>
+            </thead>
+            <tbody>
+              {MATRIX_ROWS.map((row, i) => {
+                const isLast = i === MATRIX_ROWS.length - 1;
+                return (
+                  <tr key={row.feature} className="border-b border-surface-variant last:border-b-0">
+                    <th scope="row" className={`px-6 py-5 text-sm font-semibold text-on-surface ${isLast ? "rounded-bl-2xl" : ""}`}>
+                      {row.feature}
+                    </th>
+                    <td className="border-x border-primary/10 bg-primary/5 px-6 py-5 text-sm font-medium text-primary">
+                      {row.kind === "text" ? (
+                        row.synergy === "yes" ? (
+                          <StatusIcon status="yes" />
                         ) : (
-                          <StatusIcon status={row.synergy} />
-                        )}
-                      </td>
-                      <td
-                        className={`border-b border-[#E9E4FF] bg-white px-4 py-5 text-[#4a4456] sm:px-6 md:px-8 ${isLast ? "border-b-0" : ""}`}
-                      >
-                        {row.kind === "text" ? row.matterport : <StatusIcon status={row.matterport} />}
-                      </td>
-                      <td
-                        className={`border-b border-[#E9E4FF] bg-white px-4 py-5 text-[#4a4456] sm:px-6 md:px-8 ${isLast ? "border-b-0" : ""}`}
-                      >
-                        {row.kind === "text" ? row.zillow : <StatusIcon status={row.zillow} />}
-                      </td>
-                      <td
-                        className={`border-b border-[#E9E4FF] bg-white px-4 py-5 text-[#4a4456] sm:px-6 md:px-8 ${isLast ? `border-b-0 ${bottomRadius}` : ""}`}
-                      >
-                        {row.kind === "text" ? row.sphere : <StatusIcon status={row.sphere} />}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <p className="border-t border-[#E9E4FF] bg-white px-4 py-3 text-center text-xs text-[#4a4456]/80 md:rounded-b-xl lg:hidden">
-            Scroll horizontally to see all vendors.
-          </p>
+                          row.synergy
+                        )
+                      ) : (
+                        <StatusIcon status={row.synergy} />
+                      )}
+                    </td>
+                    <td className="px-6 py-5 text-sm text-slate-500">
+                      {row.kind === "text" ? (
+                        row.matterport === "no" ? (
+                          <StatusIcon status="no" />
+                        ) : (
+                          row.matterport
+                        )
+                      ) : (
+                        <StatusIcon status={row.matterport} />
+                      )}
+                    </td>
+                    <td className={`px-6 py-5 text-sm text-slate-500 ${isLast ? "rounded-br-2xl" : ""}`}>
+                      {row.kind === "text" ? (row.zillow === "no" ? <StatusIcon status="no" /> : row.zillow) : <StatusIcon status={row.zillow} />}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
-import { DM_Mono, Fraunces, Inter } from "next/font/google";
+import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" });
-const dmMono = DM_Mono({ subsets: ["latin"], weight: ["300", "400", "500"], variable: "--font-dm-mono" });
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "SynergySo - Architectural Intelligence for the Visionary Market",
@@ -14,8 +22,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body
-        className={`${inter.variable} ${fraunces.variable} ${dmMono.variable} min-h-screen overflow-x-hidden bg-brand-bg font-sans font-light tracking-normal text-brand-text antialiased`}
+        className={`${plusJakarta.variable} ${manrope.variable} min-h-screen overflow-x-hidden bg-background font-sans text-on-background antialiased selection:bg-primary-container selection:text-white`}
       >
         {children}
       </body>

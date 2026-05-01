@@ -1,64 +1,41 @@
+const STEPS = [
+  { n: "1", icon: "smartphone", title: "Capture", body: "Walk the property holding your phone naturally.", highlight: false },
+  { n: "2", icon: "cloud_sync", title: "Process", body: "Our AI stitches the LiDAR data in the cloud.", highlight: false },
+  { n: "3", icon: "share", title: "Share", body: "Get a universal web link to post anywhere.", highlight: false },
+  { n: "4", icon: "real_estate_agent", title: "Close", body: "Buyers engage more, ask questions, and decide faster.", highlight: true },
+] as const;
+
 export default function HowItWorksSection() {
   return (
-    <section id="workflow" className="scroll-mt-28 mx-auto max-w-[1280px] bg-[#f8f9fb] px-6 py-[120px]">
-      <div className="mb-16 space-y-2 text-center">
-        <h2 className="text-[clamp(36px,5vw,52px)] font-bold tracking-[-0.02em] text-[#191c1e]">The SynergySo Workflow</h2>
-        <p className="mx-auto max-w-2xl text-[#4a4456]">
-          A seamless pipeline from physical space to digital twin, engineered for speed and clarity.
-        </p>
+    <section id="workflow" className="scroll-mt-28 mx-auto max-w-7xl px-6 py-section-padding">
+      <div className="mb-20 space-y-2 text-center">
+        <h2 className="font-display text-4xl font-bold tracking-tight text-on-background md:text-5xl">How It Works</h2>
+        <p className="mx-auto max-w-2xl text-on-surface-variant">From pocket to property tour in under 30 minutes.</p>
       </div>
-      <div className="grid auto-rows-[280px] grid-cols-1 gap-6 md:grid-cols-3">
-        <article className="row-span-1 flex flex-col justify-between rounded-xl border border-[#E9E4FF] bg-white p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] transition hover:shadow-[0px_8px_30px_rgba(127,51,255,0.08)]">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#6500e1]/10 text-[#6500e1]">◉</div>
-          <div>
-            <h3 className="mb-2 text-2xl font-semibold text-[#191c1e]">1. Open &amp; Walk</h3>
-            <p className="text-sm text-[#4a4456]">
-              Utilize built-in LiDAR technology to capture millions of data points per second simply by walking through the property.
-            </p>
+      <div className="relative grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-6">
+        <div className="absolute left-20 right-20 top-8 z-0 hidden h-0.5 bg-primary/20 md:block" aria-hidden />
+        {STEPS.map((step) => (
+          <div key={step.n} className="relative z-10 flex flex-col items-center text-center">
+            <div
+              className={`relative mb-6 flex h-16 w-16 items-center justify-center rounded-full shadow-md ${
+                step.highlight ? "bg-primary text-on-primary" : "border-2 border-primary bg-white text-primary"
+              }`}
+            >
+              <span
+                className={`absolute -right-3 -top-3 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                  step.highlight
+                    ? "border border-primary bg-surface text-primary"
+                    : "bg-primary text-on-primary"
+                }`}
+              >
+                {step.n}
+              </span>
+              <span className={`material-symbols-outlined text-2xl ${step.highlight ? "text-on-primary" : ""}`}>{step.icon}</span>
+            </div>
+            <h3 className="mb-2 font-display text-xl font-semibold text-on-surface">{step.title}</h3>
+            <p className="text-sm text-on-surface-variant">{step.body}</p>
           </div>
-        </article>
-
-        <article className="relative row-span-1 flex flex-col justify-center overflow-hidden rounded-xl border border-[#E9E4FF] bg-white p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] md:col-span-2">
-          <div className="relative z-10 max-w-md">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#6500e1]/10 text-[#6500e1]">◎</div>
-            <h3 className="mb-2 text-2xl font-semibold text-[#191c1e]">2. Process &amp; Tag</h3>
-            <p className="text-[#4a4456]">
-              Our secure cloud servers automatically stitch the data into a seamless 3D model, generating accurate floorplans and identifying key architectural
-              features autonomously.
-            </p>
-          </div>
-          <div className="absolute right-[-10%] top-[-20%] h-[300px] w-[300px] rounded-full bg-[radial-gradient(circle,rgba(127,51,255,0.1)_0%,transparent_70%)]" />
-        </article>
-
-        <article className="row-span-1 flex flex-col justify-between rounded-xl border border-[#E9E4FF] bg-white p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#6500e1]/10 text-[#6500e1]">↗</div>
-          <div>
-            <h3 className="mb-2 text-2xl font-semibold text-[#191c1e]">3. Share One Link</h3>
-            <p className="text-sm text-[#4a4456]">
-              Instantly generate a universal web link. Buyers explore the property in high-resolution directly from their browser—no app installations required.
-            </p>
-          </div>
-        </article>
-
-        <article className="row-span-1 flex flex-col justify-between rounded-xl border border-[#E9E4FF] bg-white p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#6500e1]/10 text-[#6500e1]">✦</div>
-          <div>
-            <h3 className="mb-2 text-2xl font-semibold text-[#191c1e]">4. Buyer Explores</h3>
-            <p className="text-sm text-[#4a4456]">
-              Interactive AI embedded within the tour answers specific spatial questions in real-time, keeping buyers engaged.
-            </p>
-          </div>
-        </article>
-
-        <article className="row-span-1 flex flex-col justify-between rounded-xl bg-[#6500e1] p-8 text-white shadow-[0px_10px_30px_rgba(101,0,225,0.3)]">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20">✓</div>
-          <div>
-            <h3 className="mb-2 text-2xl font-semibold text-white">5. Close Smarter</h3>
-            <p className="text-sm text-white/90">
-              Access deep analytics on buyer behavior. Know exactly which rooms captured the most attention to tailor your follow-up strategy.
-            </p>
-          </div>
-        </article>
+        ))}
       </div>
     </section>
   );

@@ -22,7 +22,7 @@
 //       aria-hidden
 //     >
 //       <div
-//         className="h-full origin-left bg-gradient-to-r from-brand-violet-deep via-brand-violet to-brand-violet-2"
+//         className="h-full origin-left bg-gradient-to-r from-primary via-primary-container to-inverse-primary"
 //         style={{
 //           transform: `scaleX(${progress})`,
 //           boxShadow: progress > 0.01 ? "0 0 8px rgba(167,139,250,0.7)" : "none",

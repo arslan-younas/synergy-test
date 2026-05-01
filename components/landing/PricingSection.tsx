@@ -2,121 +2,100 @@
 
 import { revealY } from "./tw";
 
-function Feature({ children }: { children: React.ReactNode }) {
+function Check({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <li className="flex gap-2.5 font-sans text-sm text-black/60">
-      <span className="mt-2 h-[5px] w-[5px] shrink-0 rounded-full bg-brand-violet" />
+    <li className={`flex items-center gap-3 text-sm ${className || "text-on-surface"}`}>
+      <span className="material-symbols-outlined shrink-0 text-lg text-primary">check</span>
       {children}
     </li>
   );
 }
 
-function PriceCardStarter() {
-  return (
-    <article
-      data-reveal
-      className={`${revealY} relative rounded-[20px] border border-black/10 bg-gradient-to-br from-white to-brand-panel px-8 pb-10 pt-12 backdrop-blur-md`}
-    >
-      <span className="mb-4 mt-2 inline-block font-mono text-[10.5px] uppercase tracking-[0.16em] text-brand-violet">Starter</span>
-      <div className="font-serif text-[54px] font-bold leading-none tracking-[-0.03em] text-brand-text">
-        <sup className=" align-super text-xl text-black/55">$</sup>
-        29
-      </div>
-      <div className="mb-7 mt-1.5 font-sans text-[12.5px] text-black/60">per month · cancel anytime</div>
-      <ul className="mb-7 flex flex-col gap-3">
-        <Feature>Up to 10 tours/month</Feature>
-        <Feature>LiDAR + photogrammetry</Feature>
-        <Feature>Shareable no-install link</Feature>
-        <Feature>AI Q&A on every tour</Feature>
-        <Feature>Basic buyer analytics</Feature>
-      </ul>
-      <a
-        href="#cta"
-        className="inline-flex w-full items-center justify-center rounded-full border border-black/15 px-7 py-3.5 font-sans text-sm font-medium text-brand-text transition hover:border-brand-violet hover:bg-[rgba(167,139,250,0.08)] hover:text-brand-violet"
-      >
-        Join waitlist
-      </a>
-    </article>
-  );
-}
-
-function PriceCardPro() {
-  return (
-    <article
-      data-reveal
-      className={`${revealY} relative rounded-[20px] border border-brand-violet bg-gradient-to-b from-[rgba(167,139,250,0.14)] from-0% to-white to-[60%] px-8 pb-10 pt-12 backdrop-blur-md`}
-    >
-      <span className="absolute left-1/2 top-[-12px] -translate-x-1/2 rounded-full bg-brand-violet-deep px-3.5 py-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white">
-        Most popular
-      </span>
-      <span className="mb-4 mt-2 inline-block font-mono text-[10.5px] uppercase tracking-[0.16em] text-brand-violet">Pro</span>
-      <div className="font-serif text-[54px] font-bold leading-none tracking-[-0.03em] text-brand-text">
-        <sup className=" align-super text-xl text-black/55">$</sup>
-        49
-      </div>
-      <div className="mb-7 mt-1.5 font-sans text-[12.5px] text-black/60">per month · cancel anytime</div>
-      <ul className="mb-7 flex flex-col gap-3">
-        <Feature>Unlimited tours</Feature>
-        <Feature>Full AI Q&A suite</Feature>
-        <Feature>Redesign layer (colors + furniture)</Feature>
-        <Feature>Advanced client analytics</Feature>
-        <Feature>Custom tour branding</Feature>
-        <Feature>Priority processing</Feature>
-      </ul>
-      <a
-        href="#cta"
-        className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand-violet-deep px-7 py-3.5 font-sans text-sm font-medium text-white transition hover:-translate-y-px hover:bg-brand-violet hover:shadow-[0_10px_30px_-10px_rgba(167,139,250,0.6)]"
-      >
-        Join waitlist{" "}
-        <svg className="h-3 w-3 transition-transform group-hover:translate-x-[3px]" viewBox="0 0 12 12" fill="none" aria-hidden>
-          <path d="M1 6h10M7 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </a>
-    </article>
-  );
-}
-
-function PriceCardBroker() {
-  return (
-    <article
-      data-reveal
-      className={`${revealY} relative rounded-[20px] border border-black/10 bg-gradient-to-br from-white to-brand-panel px-8 pb-10 pt-12 backdrop-blur-md`}
-    >
-      <span className="mb-4 mt-2 inline-block font-mono text-[10.5px] uppercase tracking-[0.16em] text-brand-violet">Brokerage</span>
-      <div className="font-serif text-[38px] font-bold leading-none tracking-[-0.03em] text-brand-text">Custom</div>
-      <div className="mb-7 mt-1.5 font-sans text-[12.5px] text-black/60">team licensing · launching year two</div>
-      <ul className="mb-7 flex flex-col gap-3">
-        <Feature>Everything in Pro</Feature>
-        <Feature>Team dashboard</Feature>
-        <Feature>MLS integration (v2)</Feature>
-        <Feature>SSO + admin controls</Feature>
-        <Feature>Dedicated onboarding</Feature>
-      </ul>
-      <a
-        href="#cta"
-        className="inline-flex w-full items-center justify-center rounded-full border border-black/15 px-7 py-3.5 font-sans text-sm font-medium text-brand-text transition hover:border-brand-violet hover:bg-[rgba(167,139,250,0.08)] hover:text-brand-violet"
-      >
-        Contact us
-      </a>
-    </article>
-  );
-}
-
 export default function PricingSection() {
   return (
-    <section id="pricing" className="relative scroll-mt-28 px-6 py-[70px] lg:px-[52px] lg:py-[120px]">
-      <div className="mb-14 text-center">
-        <h2 className="mt-4 font-serif text-[clamp(34px,4vw,54px)] font-bold leading-tight tracking-[-0.02em] text-brand-text">
-          Agent-paid.
-          <br />
-          <em className="bg-gradient-to-br from-brand-violet-2 to-brand-violet bg-clip-text font-semibold italic text-transparent">No approval needed.</em>
-        </h2>
+    <section id="pricing" className="scroll-mt-28 px-6 py-section-padding">
+      <div className="mb-16 text-center">
+        <h2 className="font-display text-4xl font-bold tracking-tight text-on-background md:text-5xl">Simple, transparent pricing.</h2>
+        <p className="mt-2 text-on-surface-variant">No hidden hosting fees. Ever.</p>
       </div>
 
-      <div className="mx-auto grid max-w-[1080px] grid-cols-1 gap-5 lg:grid-cols-3">
-        <PriceCardStarter />
-        <PriceCardPro />
-        <PriceCardBroker />
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
+        {/* Starter */}
+        <article
+          data-reveal
+          className={`${revealY} flex flex-col rounded-2xl border border-surface-variant bg-white p-8 shadow-sm`}
+        >
+          <h3 className="mb-2 font-display text-xl font-bold text-on-surface">Starter</h3>
+          <div className="mb-6 font-display text-4xl font-bold text-on-surface">
+            $29<span className="text-base font-normal text-on-surface-variant">/mo</span>
+          </div>
+          <p className="mb-6 border-b border-surface-variant pb-6 text-sm text-on-surface-variant">Perfect for solo agents doing a few listings a month.</p>
+          <ul className="mb-8 flex grow flex-col gap-4">
+            <Check>Up to 10 tours/month</Check>
+            <Check>LiDAR + photogrammetry</Check>
+            <Check>Shareable no-install link</Check>
+            <Check>AI Q&A on every tour</Check>
+            <Check>Basic buyer analytics</Check>
+          </ul>
+          <a
+            href="#cta"
+            className="mt-auto w-full rounded-lg border-2 border-primary py-3 text-center font-display font-bold text-primary transition-colors hover:bg-primary/5"
+          >
+            Join waitlist
+          </a>
+        </article>
+
+        {/* Pro */}
+        <article
+          data-reveal
+          className={`${revealY} relative flex flex-col rounded-2xl border-2 border-primary bg-primary/5 p-8 shadow-md md:-translate-y-4`}
+        >
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-on-primary">
+            Most Popular
+          </div>
+          <h3 className="mb-2 font-display text-xl font-bold text-on-primary-fixed-variant">Pro</h3>
+          <div className="mb-6 font-display text-4xl font-bold text-on-primary-fixed-variant">
+            $49<span className="text-base font-normal text-on-primary-fixed-variant/70">/mo</span>
+          </div>
+          <p className="mb-6 border-b border-primary/20 pb-6 text-sm text-on-primary-fixed-variant/80">Everything you need to scale your listing marketing.</p>
+          <ul className="mb-8 flex grow flex-col gap-4 text-on-primary-fixed-variant">
+            <Check className="text-inherit">Unlimited tours</Check>
+            <Check className="text-inherit">Full AI Q&A suite</Check>
+            <Check className="text-inherit">Redesign layer (colors + furniture)</Check>
+            <Check className="text-inherit">Advanced client analytics</Check>
+            <Check className="text-inherit">Custom tour branding</Check>
+            <Check className="text-inherit">Priority processing</Check>
+          </ul>
+          <a
+            href="#cta"
+            className="mt-auto w-full rounded-lg bg-primary py-3 text-center font-display font-bold text-on-primary shadow-lg shadow-primary/30 transition hover:bg-primary/90"
+          >
+            Join waitlist
+          </a>
+        </article>
+
+        {/* Brokerage */}
+        <article
+          data-reveal
+          className={`${revealY} flex flex-col rounded-2xl border border-surface-variant bg-white p-8 shadow-sm`}
+        >
+          <h3 className="mb-2 font-display text-xl font-bold text-on-surface">Brokerage</h3>
+          <div className="mb-6 font-display text-4xl font-bold text-on-surface">Custom</div>
+          <p className="mb-6 border-b border-surface-variant pb-6 text-sm text-on-surface-variant">Team management and white-labeling for offices.</p>
+          <ul className="mb-8 flex grow flex-col gap-4">
+            <Check>Everything in Pro</Check>
+            <Check>Team dashboard</Check>
+            <Check>MLS integration (v2)</Check>
+            <Check>SSO + admin controls</Check>
+            <Check>Dedicated onboarding</Check>
+          </ul>
+          <a
+            href="#cta"
+            className="mt-auto w-full rounded-lg border border-surface-variant py-3 text-center font-display font-bold text-on-surface transition-colors hover:bg-surface-variant"
+          >
+            Contact Sales
+          </a>
+        </article>
       </div>
     </section>
   );

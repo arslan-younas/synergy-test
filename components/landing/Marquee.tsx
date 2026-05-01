@@ -17,12 +17,12 @@ function Row({ loop }: { loop: typeof items }) {
       {loop.map(([city, st], i) => (
         <div
           key={`${city}-${st}-${i}`}
-          className="flex shrink-0 items-center gap-12 whitespace-nowrap font-serif text-xl font-normal tracking-tight text-black/55"
+          className="flex shrink-0 items-center gap-12 whitespace-nowrap font-display text-xl font-normal tracking-tight text-on-surface-variant"
         >
           <span>
-            {city}, <em className="italic text-brand-violet">{st}</em>
+            {city}, <em className="italic text-primary">{st}</em>
           </span>
-          <span className="text-[10px] text-brand-violet">✦</span>
+          <span className="text-[10px] text-primary">✦</span>
         </div>
       ))}
     </>
@@ -33,7 +33,7 @@ export default function Marquee() {
   /* Two identical runs so translateX(-50%) loops seamlessly */
   const loop = items;
   return (
-    <div className="relative overflow-hidden border-y border-black/10 bg-brand-surface py-6 backdrop-blur-md">
+    <div className="relative overflow-hidden border-y border-outline-variant/30 bg-surface-container-lowest py-6 backdrop-blur-md">
       <div className="flex w-max flex-nowrap animate-marquee">
         <Row loop={loop} />
         <Row loop={loop} />
