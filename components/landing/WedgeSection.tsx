@@ -7,7 +7,7 @@ const WEDGE_ITEMS = [
   {
     icon: "timer",
     title: "Self-Serve",
-    description: "Scan to share in under 30 mins.",
+    description: "Scan to share in under 20 mins.",
   },
   {
     icon: "forum",
