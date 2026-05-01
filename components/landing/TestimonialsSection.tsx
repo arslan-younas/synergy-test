@@ -2,15 +2,11 @@ import { revealY } from "./tw";
 
 export default function TestimonialsSection() {
   return (
-    <section className="relative px-6 py-[70px] lg:px-[52px] lg:py-[120px]">
+    <section id="testimonials" className="bg-[#f8f9fb] px-6 py-[120px] md:px-12">
       <div className="mb-14 text-center">
-        <span className="mb-3.5 inline-block rounded-full border border-[rgba(167,139,250,0.2)] bg-[rgba(167,139,250,0.08)] px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-brand-violet">
-          For agents, by an agent
-        </span>
-        <h2 className="mt-4 font-serif text-[clamp(34px,4vw,54px)] font-normal leading-tight tracking-[-0.02em]">
-          Built from
-          <br />
-          <em className="bg-gradient-to-br from-brand-violet-2 to-brand-violet bg-clip-text font-medium italic text-transparent">real deals.</em>
+        <h2 className="mt-4 font-serif text-[clamp(34px,4vw,54px)] font-bold text-brand-text leading-tight tracking-[-0.02em]">
+          Built from 
+          <em className="bg-gradient-to-br from-brand-violet-2 to-brand-violet bg-clip-text font-semibold italic text-transparent"> real deals.</em>
         </h2>
       </div>
       <div className="mx-auto mt-14 grid max-w-[1200px] grid-cols-1 gap-[18px] lg:grid-cols-3">
@@ -45,7 +41,7 @@ export default function TestimonialsSection() {
                 {t.initials}
               </div>
               <div>
-                <h4 className="text-[13.5px] font-medium">{t.name}</h4>
+                <h4 className="text-sm font-medium text-brand-text">{t.name}</h4>
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-black/55">{t.role}</p>
               </div>
             </div>

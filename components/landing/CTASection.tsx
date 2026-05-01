@@ -15,7 +15,7 @@ export default function CTASection() {
   };
 
   return (
-    <section id="cta" className="relative px-6 pb-24 pt-[100px] lg:px-[52px] lg:pb-28 lg:pt-[100px]">
+    <section id="cta" className="relative scroll-mt-28 px-6 pb-24 pt-[100px] lg:px-[52px] lg:pb-28 lg:pt-[100px]">
       <div className="relative mx-auto max-w-[900px] overflow-hidden rounded-[28px] border border-black/10 bg-gradient-to-br from-white to-brand-panel px-10 py-[70px] text-center backdrop-blur-md lg:px-[52px] before:pointer-events-none before:absolute before:left-1/2 before:top-[-200px] before:h-[600px] before:w-[600px] before:-translate-x-1/2 before:rounded-full before:bg-[radial-gradient(circle,rgba(167,139,250,0.12),transparent_60%)] before:content-['']">
         <h2 className="relative mb-4 font-serif text-[clamp(36px,4vw,52px)] font-medium tracking-tight">
           Secure Your{" "}
