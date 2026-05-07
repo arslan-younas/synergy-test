@@ -1,7 +1,6 @@
 export type Hotspot = {
-  x: number;
-  y: number;
-  z: number;
+  px: number; // % from left edge of panoramic image, 0–100
+  py: number; // % from top edge of panoramic image, 0–100
   label: string;
   kind: "feature" | "measure" | "concern";
   ai: string;
@@ -11,13 +10,11 @@ export type Room = {
   id: string;
   name: string;
   italic: string;
-  bounds: { x: number; z: number; w: number; d: number };
+  imgSrc: string;
+  panoSrc?: string; // equirectangular 360° image — enables spherical PSV viewer
+  bounds: { w: number; d: number };
   ceiling: number;
   sqft: number;
-  color: number;
-  floor: number;
-  cameraTarget: { x: number; y: number; z: number };
-  cameraOrbit: { x: number; y: number; z: number };
   features: string[];
   hotspots: Hotspot[];
 };
@@ -32,17 +29,6 @@ export type ProjectedHotspot = {
   top: number;
   visible: boolean;
 };
-
-export type MaterialRole =
-  | "upholstery"
-  | "fabric"
-  | "wood"
-  | "woodDark"
-  | "metal"
-  | "metalBrass"
-  | "stone"
-  | "glass"
-  | "accent";
 
 export type FurnitureStyleId = "original" | "modern" | "cozy" | "none";
 

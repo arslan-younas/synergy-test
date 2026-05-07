@@ -1,152 +1,333 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as THREE from "three";
-import type {
-  ProjectedHotspot,
-  FloatAnswer,
-  ChatMessage,
-  FurnitureStyleId,
-  MaterialRole,
-  Hotspot,
-} from "./buyerTour.types";
-import { ROOMS, WALL_SWATCHES, FLOOR_SWATCHES, FURN_ROLE_COLORS } from "./buyerTour.constants";
+import type { FloatAnswer, ChatMessage } from "./buyerTour.types";
+import { ROOMS } from "./buyerTour.constants";
 import BuyerTourHUD from "./BuyerTourHUD";
 import BuyerTourChat from "./BuyerTourChat";
-import BuyerTourRedesign from "./BuyerTourRedesign";
-import styles from "./BuyerTourSection.module.css";
+
+const ReactPhotoSphereViewer = dynamic(
+  () => import("react-photo-sphere-viewer").then((m) => ({ default: m.ReactPhotoSphereViewer })),
+  { ssr: false, loading: () => <div className="w-full h-full bg-[#1a1613]" /> },
+);
+
+const ZOOM_MIN = 1;
+const ZOOM_MAX = 6;
+const HOTSPOT_ZOOM = 2.5;
 
 export default function BuyerTourSection() {
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const frameRef = useRef<number>(0);
-  const roomGroupsRef = useRef<Record<string, THREE.Group>>({});
-  const targetPosRef = useRef(new THREE.Vector3());
-  const targetLookRef = useRef(new THREE.Vector3());
-  const lookRef = useRef(new THREE.Vector3());
-  const orbitAngleRef = useRef(-0.5);
-  const orbitModeRef = useRef(true);
+  const rootRef        = useRef<HTMLDivElement>(null);
+  const wrapperRef     = useRef<HTMLDivElement>(null);
   const currentRoomRef = useRef(0);
-  const pointerRef = useRef({ down: false, x: 0, y: 0, yaw: 0, pitch: 0 });
-  const hotspotsRef = useRef<Array<{ id: string; roomId: string; hotspot: Hotspot }>>([]);
-  const floatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastHudTickRef = useRef(0);
-  const lastProjectedSignatureRef = useRef("");
-  const initializedRef = useRef(false);
-  const runningRef = useRef(false);
-  const visibleRef = useRef(false);
+  const floatTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [sceneReady, setSceneReady] = useState(false);
+  const zoomRef         = useRef(1);
+  const panRef          = useRef({ x: 0, y: 0 });
+  const dragging        = useRef(false);
+  const dragMoved       = useRef(false);
+  const lastPtr         = useRef({ x: 0, y: 0 });
+  const pinchStart      = useRef({ dist: 0, zoom: 1 });
+  const wheelTargetZoom = useRef(1);
+  const velocity        = useRef({ x: 0, y: 0 });
+  const momentumRaf     = useRef<number | null>(null);
+  const zoomRaf         = useRef<number | null>(null);
+
   const [currentRoomIdx, setCurrentRoomIdx] = useState(0);
-  const [orbitMode, setOrbitMode] = useState(true);
-  const [visitSeconds, setVisitSeconds] = useState(0);
-  const [projectedHotspots, setProjectedHotspots] = useState<ProjectedHotspot[]>([]);
-  const [aiOpen, setAiOpen] = useState(false);
+  const [panMode, setPanMode]               = useState(false);
+  const [zoomLabel, setZoomLabel]           = useState(1);
+  const [visitSeconds, setVisitSeconds]     = useState(0);
+  const [aiOpen, setAiOpen]   = useState(false);
   const [aiInput, setAiInput] = useState("");
   const [aiMessages, setAiMessages] = useState<ChatMessage[]>([
     { role: "bot", text: "Hi — ask me about dimensions, light, fit, layout, and materials in this room." },
   ]);
-  const [redesignOpen, setRedesignOpen] = useState(false);
-  const [selectedWall, setSelectedWall] = useState(0);
-  const [selectedFloor, setSelectedFloor] = useState(0);
-  const [selectedFurniture, setSelectedFurniture] = useState<FurnitureStyleId>("original");
   const [floatAnswer, setFloatAnswer] = useState<FloatAnswer>({
-    visible: false,
-    left: 0,
-    top: 0,
-    text: "",
+    visible: false, left: 0, top: 0, text: "",
   });
+  const [activeHotspotId, setActiveHotspotId] = useState<string | null>(null);
 
   const currentRoom = ROOMS[currentRoomIdx];
 
   const roomSuggestions = useMemo(() => {
     const map: Record<string, string[]> = {
-      living: ["How tall are the ceilings?", "Could a 92-inch sofa fit?", "What's the afternoon light like?"],
+      living:  ["How tall are the ceilings?", "Could a 92-inch sofa fit?", "What's the afternoon light like?"],
       kitchen: ["Is there room for an island?", "How big is the kitchen?", "What finishes are here?"],
-      bath: ["How can this room feel brighter?", "How big is the shower?", "Is this wall load-bearing?"],
-      bed: ["Will a king bed fit?", "How much wall space is there?", "How does morning light look?"],
-      office: ["Desk wall length?", "Could this fit a daybed?", "How bright is it at 9am?"],
+      bath:    ["How can this room feel brighter?", "How big is the shower?", "Is this wall load-bearing?"],
+      bed:     ["Will a king bed fit?", "How much wall space is there?", "How does morning light look?"],
+      office:  ["Desk wall length?", "Could this fit a daybed?", "How bright is it at 9am?"],
     };
     return map[currentRoom.id] ?? [];
   }, [currentRoom.id]);
 
-  const applyRoomHighlight = useCallback((roomId: string, orbit: boolean) => {
-    Object.values(roomGroupsRef.current).forEach((group) => {
-      const active = group.userData.roomId === roomId;
-      group.traverse((node) => {
-        const mesh = node as THREE.Mesh;
-        if (!mesh.material || !("opacity" in mesh.material)) return;
-        if (mesh.userData.kind === "wall") {
-          const mat = mesh.material as THREE.MeshStandardMaterial;
-          mat.transparent = orbit || !active;
-          mat.opacity = orbit ? 0.85 : active ? 1 : 0.55;
-        }
-      });
-    });
+  /* ── transform apply ── */
+  const applyPanoTransform = useCallback(() => {
+    const w = wrapperRef.current;
+    if (!w) return;
+    w.style.transition = "none";
+    w.style.transform  = `translate(${panRef.current.x}px,${panRef.current.y}px) scale(${zoomRef.current})`;
+    w.style.setProperty("--hs-scale", `${1 / zoomRef.current}`);
   }, []);
 
-  const setRoom = useCallback(
-    (idx: number) => {
-      const room = ROOMS[idx];
-      currentRoomRef.current = idx;
-      setCurrentRoomIdx(idx);
-      targetPosRef.current.set(room.cameraOrbit.x, room.cameraOrbit.y, room.cameraOrbit.z);
-      targetLookRef.current.set(room.cameraTarget.x, room.cameraTarget.y, room.cameraTarget.z);
-      pointerRef.current.yaw = 0;
-      pointerRef.current.pitch = 0;
-      applyRoomHighlight(room.id, orbitModeRef.current);
-    },
-    [applyRoomHighlight]
-  );
+  const clampPan = useCallback((x: number, y: number, z: number) => {
+    const root = rootRef.current;
+    if (!root) return { x, y };
+    const mx = (root.offsetWidth  * (z - 1)) / 2;
+    const my = (root.offsetHeight * (z - 1)) / 2;
+    return { x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
+  }, []);
 
-  const applyWall = useCallback((hex: number | null) => {
-    const room = ROOMS[currentRoomRef.current];
-    const group = roomGroupsRef.current[room.id];
-    if (!group) return;
-    const target = hex ?? room.color;
-    group.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (mesh.userData.kind === "wall" && mesh.material) {
-        (mesh.material as THREE.MeshStandardMaterial).color.setHex(target);
+  const stopAllMotion = useCallback(() => {
+    if (momentumRaf.current) { cancelAnimationFrame(momentumRaf.current); momentumRaf.current = null; }
+    if (zoomRaf.current)     { cancelAnimationFrame(zoomRaf.current);     zoomRaf.current = null;     }
+    velocity.current = { x: 0, y: 0 };
+  }, []);
+
+  /* smooth rAF zoom+pan to a target — easeOutCubic */
+  const animateToZoomAt = useCallback((
+    targetZ: number,
+    targetPx: number,
+    targetPy: number,
+    duration = 380,
+  ) => {
+    if (zoomRaf.current) cancelAnimationFrame(zoomRaf.current);
+    const start  = performance.now();
+    const fromZ  = zoomRef.current;
+    const fromPx = panRef.current.x;
+    const fromPy = panRef.current.y;
+    const clamped = clampPan(targetPx, targetPy, targetZ);
+    const toPx = targetZ <= ZOOM_MIN ? 0 : clamped.x;
+    const toPy = targetZ <= ZOOM_MIN ? 0 : clamped.y;
+    const raf = (now: number) => {
+      const t    = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const z    = fromZ  + (targetZ - fromZ)  * ease;
+      const px   = fromPx + (toPx   - fromPx)  * ease;
+      const py   = fromPy + (toPy   - fromPy)  * ease;
+      zoomRef.current = z;
+      panRef.current  = { x: px, y: py };
+      applyPanoTransform();
+      setZoomLabel(z);
+      if (t < 1) {
+        zoomRaf.current = requestAnimationFrame(raf);
+      } else {
+        wheelTargetZoom.current = targetZ;
+        zoomRaf.current = null;
       }
-    });
-  }, []);
+    };
+    zoomRaf.current = requestAnimationFrame(raf);
+  }, [applyPanoTransform, clampPan]);
 
-  const applyFloor = useCallback((hex: number | null) => {
-    const room = ROOMS[currentRoomRef.current];
-    const group = roomGroupsRef.current[room.id];
-    if (!group) return;
-    const target = hex ?? room.floor;
-    group.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (mesh.userData.kind === "floor" && mesh.material) {
-        (mesh.material as THREE.MeshStandardMaterial).color.setHex(target);
+  /* zoom-only shorthand (no pan shift) */
+  const animateToZoom = useCallback((target: number, duration = 350) => {
+    animateToZoomAt(target, panRef.current.x, panRef.current.y, duration);
+  }, [animateToZoomAt]);
+
+  /* instant reset */
+  const resetPanoTransform = useCallback(() => {
+    stopAllMotion();
+    wheelTargetZoom.current = 1;
+    zoomRef.current = 1;
+    panRef.current  = { x: 0, y: 0 };
+    applyPanoTransform();
+    setZoomLabel(1);
+    setActiveHotspotId(null);
+  }, [applyPanoTransform, stopAllMotion]);
+
+  /* commit + CSS-transition for hotspot pan+zoom */
+  const commitZoom = useCallback((z: number, px?: number, py?: number, animate = false) => {
+    zoomRef.current = z;
+    panRef.current  = clampPan(px ?? panRef.current.x, py ?? panRef.current.y, z);
+    if (z === ZOOM_MIN) panRef.current = { x: 0, y: 0 };
+    const w = wrapperRef.current;
+    if (w) {
+      w.style.transition = animate ? "transform 0.35s cubic-bezier(.4,0,.2,1)" : "none";
+      w.style.transform  = `translate(${panRef.current.x}px,${panRef.current.y}px) scale(${zoomRef.current})`;
+      w.style.setProperty("--hs-scale", `${1 / zoomRef.current}`);
+    }
+    setZoomLabel(z);
+  }, [clampPan]);
+
+  /* momentum decay */
+  const startMomentum = useCallback(() => {
+    if (momentumRaf.current) cancelAnimationFrame(momentumRaf.current);
+    const step = () => {
+      velocity.current.x *= 0.88;
+      velocity.current.y *= 0.88;
+      if (Math.abs(velocity.current.x) < 0.4 && Math.abs(velocity.current.y) < 0.4) {
+        momentumRaf.current = null;
+        return;
       }
-    });
+      panRef.current = clampPan(
+        panRef.current.x + velocity.current.x,
+        panRef.current.y + velocity.current.y,
+        zoomRef.current,
+      );
+      applyPanoTransform();
+      momentumRaf.current = requestAnimationFrame(step);
+    };
+    momentumRaf.current = requestAnimationFrame(step);
+  }, [applyPanoTransform, clampPan]);
+
+
+  /* Room change: intro zoom animation */
+  useEffect(() => {
+    currentRoomRef.current = currentRoomIdx;
+    stopAllMotion();
+    zoomRef.current = 1.55;
+    panRef.current  = { x: 0, y: 0 };
+    wheelTargetZoom.current = 1;
+    applyPanoTransform();
+    setZoomLabel(1.55);
+    setFloatAnswer((f) => ({ ...f, visible: false }));
+    setActiveHotspotId(null);
+    animateToZoomAt(1.0, 0, 0, 1200);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentRoomIdx]);
+
+  // Visit timer
+  useEffect(() => {
+    const id = window.setInterval(() => setVisitSeconds((s) => s + 1), 1000);
+    return () => window.clearInterval(id);
   }, []);
 
-  const applyFurniture = useCallback((style: FurnitureStyleId) => {
-    const group = roomGroupsRef.current[ROOMS[currentRoomRef.current].id];
-    if (!group) return;
-    group.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (mesh.userData.kind !== "furniture" || !mesh.material) return;
-      mesh.visible = style !== "none";
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      if (style === "modern") mat.color.setHex(0x2f2d2a);
-      if (style === "cozy") mat.color.setHex(0xb08a6a);
-      if (style === "original") {
-        const role = mesh.userData.role as MaterialRole | undefined;
-        if (role && FURN_ROLE_COLORS[role] !== undefined) mat.color.setHex(FURN_ROLE_COLORS[role]);
-      }
-    });
-  }, []);
+  /* hotspot click: CSS-transition zoom+pan to hotspot area */
+  const handleHotspotClick = useCallback((hsId: string, px: number, py: number, ai: string) => {
+    const root = rootRef.current;
+    if (!root) return;
+    stopAllMotion();
+    const W = root.offsetWidth;
+    const H = root.offsetHeight;
+    const rawTx = W * (0.5 - px / 100) * HOTSPOT_ZOOM;
+    const rawTy = H * (0.5 - py / 100) * HOTSPOT_ZOOM;
+    commitZoom(HOTSPOT_ZOOM, rawTx, rawTy, true);
+    wheelTargetZoom.current = HOTSPOT_ZOOM;
+    setActiveHotspotId(hsId);
+    if (floatTimerRef.current) clearTimeout(floatTimerRef.current);
+    setFloatAnswer({ visible: true, text: ai, left: W / 2, top: H * 0.44 });
+  }, [commitZoom, stopAllMotion]);
 
+  const closeFloatAnswer = useCallback(() => {
+    if (floatTimerRef.current) clearTimeout(floatTimerRef.current);
+    setFloatAnswer((f) => ({ ...f, visible: false }));
+    resetPanoTransform();
+  }, [resetPanoTransform]);
+
+  /* ── click-to-zoom: first click zooms in, next click resets ── */
+  const onImageClick = useCallback((e: React.MouseEvent) => {
+    if (dragMoved.current) return; // was a drag, not a click
+    const root = rootRef.current;
+    if (!root) return;
+    stopAllMotion();
+
+    // if already zoomed → reset
+    if (zoomRef.current > 1.05) {
+      animateToZoomAt(ZOOM_MIN, 0, 0, 400);
+      wheelTargetZoom.current = ZOOM_MIN;
+      setActiveHotspotId(null);
+      setFloatAnswer((f) => ({ ...f, visible: false }));
+      return;
+    }
+
+    // zoom 2.5× into the clicked point
+    const rect  = root.getBoundingClientRect();
+    const cx    = e.clientX - rect.left;
+    const cy    = e.clientY - rect.top;
+    const W     = root.offsetWidth;
+    const H     = root.offsetHeight;
+    const nextZ = 2.5;
+    const scale = nextZ / zoomRef.current;
+    const newPx = panRef.current.x * scale - (cx - W / 2) * (scale - 1);
+    const newPy = panRef.current.y * scale - (cy - H / 2) * (scale - 1);
+    animateToZoomAt(nextZ, newPx, newPy, 420);
+    wheelTargetZoom.current = nextZ;
+  }, [animateToZoomAt, stopAllMotion]);
+
+  /* ── mouse drag ── */
+  const onMouseDown = (e: React.MouseEvent) => {
+    stopAllMotion();
+    dragging.current  = true;
+    dragMoved.current = false;
+    velocity.current  = { x: 0, y: 0 };
+    lastPtr.current   = { x: e.clientX, y: e.clientY };
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragging.current) return;
+    const dx = e.clientX - lastPtr.current.x;
+    const dy = e.clientY - lastPtr.current.y;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved.current = true;
+    velocity.current = { x: dx, y: dy };
+    lastPtr.current  = { x: e.clientX, y: e.clientY };
+    panRef.current   = clampPan(panRef.current.x + dx, panRef.current.y + dy, zoomRef.current);
+    applyPanoTransform();
+  };
+  const onMouseUp = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    startMomentum();
+  };
+
+  /* ── touch ── */
+  const touchDist = (t: React.TouchList) =>
+    Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    stopAllMotion();
+    if (e.touches.length === 1) {
+      dragging.current   = true;
+      dragMoved.current  = false;
+      velocity.current   = { x: 0, y: 0 };
+      lastPtr.current    = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2) {
+      dragging.current   = false;
+      pinchStart.current = { dist: touchDist(e.touches), zoom: zoomRef.current };
+    }
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && dragging.current) {
+      const dx = e.touches[0].clientX - lastPtr.current.x;
+      const dy = e.touches[0].clientY - lastPtr.current.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragMoved.current = true;
+      velocity.current = { x: dx, y: dy };
+      lastPtr.current  = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      panRef.current   = clampPan(panRef.current.x + dx, panRef.current.y + dy, zoomRef.current);
+      applyPanoTransform();
+    } else if (e.touches.length === 2) {
+      const next = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX,
+        pinchStart.current.zoom * (touchDist(e.touches) / pinchStart.current.dist)));
+      commitZoom(next);
+      wheelTargetZoom.current = next;
+    }
+  };
+  const onTouchEnd = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    startMomentum();
+  };
+
+  /* ── room navigation ── */
+  const selectRoom = useCallback((idx: number) => { setCurrentRoomIdx(idx); }, []);
+  const goPrev = useCallback(() => { setCurrentRoomIdx((i) => (i - 1 + ROOMS.length) % ROOMS.length); }, []);
+  const goNext = useCallback(() => { setCurrentRoomIdx((i) => (i + 1) % ROOMS.length); }, []);
+
+  /* ── keyboard ── */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.tagName === "INPUT") return;
+      if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); goPrev(); }
+      if (e.key === "a" || e.key === "A") setAiOpen((v) => !v);
+      if (e.key === "p" || e.key === "P") setPanMode((v) => !v);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goNext, goPrev]);
+
+  /* ── AI chat ── */
   const answerQuestion = useCallback((text: string) => {
-    const q = text.toLowerCase();
+    const q    = text.toLowerCase();
     const room = ROOMS[currentRoomRef.current];
     if (/(ceiling|how tall|height)/.test(q))
       return `Ceilings in ${room.name} are approximately ${room.ceiling}' from LiDAR scan data.`;
@@ -176,632 +357,169 @@ export default function BuyerTourSection() {
     [answerQuestion]
   );
 
-  useEffect(() => {
-    orbitModeRef.current = orbitMode;
-  }, [orbitMode]);
-
-  useEffect(() => {
-    if (!rootRef.current || !canvasRef.current) return;
-    const root = rootRef.current;
-    const canvas = canvasRef.current;
-
-    let cleanupScene: (() => void) | null = null;
-  let aborted = false;
-  let cancelInit: (() => void) | null = null;
-
-    const loop = () => {
-      const renderer = rendererRef.current;
-      const scene = sceneRef.current;
-      const camera = cameraRef.current;
-      if (!renderer || !scene || !camera || !rootRef.current || !runningRef.current) return;
-
-      const room = ROOMS[currentRoomRef.current];
-      if (orbitModeRef.current) {
-        orbitAngleRef.current += 0.0015;
-        const radius = 42;
-        targetPosRef.current.set(
-          Math.cos(orbitAngleRef.current) * radius,
-          15,
-          Math.sin(orbitAngleRef.current) * radius
-        );
-        targetLookRef.current.set(0, 2, 0);
-      } else {
-        targetPosRef.current.set(room.cameraOrbit.x, room.cameraOrbit.y, room.cameraOrbit.z);
-        targetLookRef.current.set(room.cameraTarget.x, room.cameraTarget.y, room.cameraTarget.z);
-      }
-
-      camera.position.lerp(targetPosRef.current, 0.05);
-      lookRef.current.lerp(targetLookRef.current, 0.06);
-      const lookFinal = lookRef.current
-        .clone()
-        .add(new THREE.Vector3(Math.sin(pointerRef.current.yaw) * 6, pointerRef.current.pitch * 4, 0));
-      camera.lookAt(lookFinal);
-
-      if (performance.now() - lastHudTickRef.current > 120) {
-        const width = rootRef.current.clientWidth;
-        const height = rootRef.current.clientHeight;
-        const projected = hotspotsRef.current.map((entry) => {
-          const vec = new THREE.Vector3(entry.hotspot.x, entry.hotspot.y, entry.hotspot.z).project(camera);
-          const visibleByRoom =
-            orbitModeRef.current || entry.roomId === ROOMS[currentRoomRef.current].id;
-          const onScreen = vec.x > -1.08 && vec.x < 1.08 && vec.y > -1.08 && vec.y < 1.08;
-          return {
-            id: entry.id,
-            roomId: entry.roomId,
-            label: entry.hotspot.label,
-            ai: entry.hotspot.ai,
-            kind: entry.hotspot.kind,
-            left: Math.round((vec.x * 0.5 + 0.5) * width),
-            top: Math.round((-vec.y * 0.5 + 0.5) * height),
-            visible: visibleByRoom && vec.z <= 1.02 && onScreen,
-          };
-        });
-        const signature = projected
-          .map((p) => `${p.id}:${p.left}:${p.top}:${p.visible ? 1 : 0}`)
-          .join("|");
-        if (signature !== lastProjectedSignatureRef.current) {
-          setProjectedHotspots(projected);
-          lastProjectedSignatureRef.current = signature;
-        }
-        lastHudTickRef.current = performance.now();
-      }
-
-      renderer.render(scene, camera);
-      frameRef.current = requestAnimationFrame(loop);
-    };
-
-    const initScene = () => {
-      hotspotsRef.current = [];
-      roomGroupsRef.current = {};
-
-      const dpr = window.devicePixelRatio;
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: dpr <= 1, powerPreference: "high-performance" });
-      rendererRef.current = renderer;
-      renderer.setPixelRatio(Math.min(dpr, 1.5));
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.1;
-      renderer.setClearColor(0xd8d2c4, 1);
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-      const scene = new THREE.Scene();
-      scene.fog = new THREE.Fog(0xd8d2c4, 70, 160);
-      sceneRef.current = scene;
-
-      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 180);
-      camera.position.set(Math.cos(-0.5) * 42, 15, Math.sin(-0.5) * 42);
-      cameraRef.current = camera;
-      lookRef.current.set(0, 2, 0);
-      targetLookRef.current.set(0, 2, 0);
-
-      scene.add(new THREE.AmbientLight(0xfff4e0, 0.35));
-      const key = new THREE.DirectionalLight(0xffe6b8, 1.25);
-      key.position.set(15, 20, 12);
-      key.castShadow = true;
-      key.shadow.mapSize.set(512, 512);
-      key.shadow.camera.near = 0.5;
-      key.shadow.camera.far = 80;
-      scene.add(key);
-      const fill = new THREE.DirectionalLight(0xc9d4e0, 0.15);
-      fill.position.set(-15, 10, -8);
-      scene.add(fill);
-
-      const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(120, 120),
-        new THREE.MeshStandardMaterial({ color: 0xc9c0ad, roughness: 1 })
-      );
-      ground.rotation.x = -Math.PI / 2;
-      ground.position.y = -0.01;
-      ground.receiveShadow = true;
-      scene.add(ground);
-
-      // Build rooms one per event-loop tick — keeps main thread free between each
-      void (async () => {
-      for (const room of ROOMS) {
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
-        if (aborted) return;
-        const group = new THREE.Group();
-        group.userData.roomId = room.id;
-        const roomShell = new THREE.Group();
-        roomShell.userData.layer = "shell";
-        const roomFurniture = new THREE.Group();
-        roomFurniture.userData.layer = "furniture";
-        const roomDecor = new THREE.Group();
-        roomDecor.userData.layer = "decor";
-
-        const floor = new THREE.Mesh(
-          new THREE.BoxGeometry(room.bounds.w, 0.15, room.bounds.d),
-          new THREE.MeshStandardMaterial({ color: room.floor, roughness: 0.85 })
-        );
-        floor.position.set(
-          room.bounds.x + room.bounds.w / 2,
-          0.075,
-          room.bounds.z + room.bounds.d / 2
-        );
-        floor.receiveShadow = true;
-        floor.userData.kind = "floor";
-        roomShell.add(floor);
-
-        const cx = room.bounds.x + room.bounds.w / 2;
-        const cz = room.bounds.z + room.bounds.d / 2;
-        const wallMat = new THREE.MeshStandardMaterial({ color: room.color, roughness: 0.92 });
-        const walls = [
-          { x: cx, y: room.ceiling / 2, z: room.bounds.z, w: room.bounds.w + 0.18, h: room.ceiling, d: 0.18 },
-          { x: cx, y: room.ceiling / 2, z: room.bounds.z + room.bounds.d, w: room.bounds.w + 0.18, h: room.ceiling * 0.35, d: 0.18 },
-          { x: room.bounds.x, y: room.ceiling / 2, z: cz, w: 0.18, h: room.ceiling, d: room.bounds.d },
-          { x: room.bounds.x + room.bounds.w, y: room.ceiling / 2, z: cz, w: 0.18, h: room.ceiling, d: room.bounds.d },
-        ];
-        walls.forEach((w) => {
-          const wall = new THREE.Mesh(new THREE.BoxGeometry(w.w, w.h, w.d), wallMat.clone());
-          wall.position.set(w.x, w.h / 2, w.z);
-          wall.castShadow = true;
-          wall.receiveShadow = true;
-          wall.userData.kind = "wall";
-          roomShell.add(wall);
-        });
-
-        const rug = new THREE.Mesh(
-          new THREE.PlaneGeometry(room.bounds.w * 0.5, room.bounds.d * 0.45),
-          new THREE.MeshStandardMaterial({ color: 0x8a7a5e, roughness: 0.95, transparent: true, opacity: 0.35 })
-        );
-        rug.rotation.x = -Math.PI / 2;
-        rug.position.set(cx, 0.151, cz);
-        rug.renderOrder = 1;
-        roomDecor.add(rug);
-
-        const addFurniture = (
-          geometry: THREE.BufferGeometry,
-          role: MaterialRole,
-          x: number,
-          y: number,
-          z: number
-        ) => {
-          const mat = new THREE.MeshStandardMaterial({
-            color: FURN_ROLE_COLORS[role],
-            roughness: role === "metal" || role === "metalBrass" ? 0.45 : 0.84,
-            metalness: role === "metal" || role === "metalBrass" ? 0.65 : 0,
-            transparent: role === "glass",
-            opacity: role === "glass" ? 0.35 : 1,
-          });
-          const mesh = new THREE.Mesh(geometry, mat);
-          mesh.position.set(x, y, z);
-          mesh.castShadow = false;
-          mesh.receiveShadow = true;
-          mesh.userData.kind = "furniture";
-          mesh.userData.role = role;
-          roomFurniture.add(mesh);
-          return mesh;
-        };
-
-        if (room.id === "living") {
-          const sofaX = cx - 2;
-          const sofaZ = cz - 3.6;
-          addFurniture(new THREE.BoxGeometry(7.2, 0.5, 3.2), "woodDark", sofaX, 0.4, sofaZ);
-          addFurniture(new THREE.BoxGeometry(7.0, 0.7, 2.6), "upholstery", sofaX, 0.95, sofaZ + 0.2);
-          addFurniture(new THREE.BoxGeometry(7.2, 2.0, 0.5), "upholstery", sofaX, 1.7, sofaZ - 1.4);
-          addFurniture(new THREE.BoxGeometry(0.5, 1.6, 3.2), "upholstery", sofaX - 3.4, 1.5, sofaZ);
-          addFurniture(new THREE.BoxGeometry(0.5, 1.6, 3.2), "upholstery", sofaX + 3.4, 1.5, sofaZ);
-          for (let i = -1; i <= 1; i++)
-            addFurniture(new THREE.BoxGeometry(2.0, 0.7, 0.5), "fabric", sofaX + i * 2.2, 1.55, sofaZ - 1.05);
-
-          const ctX = sofaX;
-          const ctZ = sofaZ + 3.1;
-          addFurniture(new THREE.BoxGeometry(4, 0.18, 2), "wood", ctX, 1.3, ctZ);
-          [[-1.8, -0.8], [1.8, -0.8], [-1.8, 0.8], [1.8, 0.8]].forEach(([lx, lz]) => {
-            addFurniture(new THREE.BoxGeometry(0.2, 1.2, 0.2), "woodDark", ctX + lx, 0.6, ctZ + lz);
-          });
-          addFurniture(new THREE.CylinderGeometry(0.18, 0.18, 0.55, 8), "accent", ctX - 1.2, 1.67, ctZ);
-          addFurniture(new THREE.BoxGeometry(0.8, 0.05, 1.0), "wood", ctX + 0.8, 1.42, ctZ);
-
-          const lpX = sofaX - 4.6;
-          const lpZ = sofaZ + 0.6;
-          addFurniture(new THREE.CylinderGeometry(0.4, 0.4, 0.1, 8), "metal", lpX, 0.05, lpZ);
-          addFurniture(new THREE.CylinderGeometry(0.04, 0.04, 5, 6), "metalBrass", lpX, 2.55, lpZ);
-          addFurniture(new THREE.CylinderGeometry(0.5, 0.7, 1, 8, 1, true), "fabric", lpX, 5.3, lpZ);
-
-          const shelfX = cx + 6;
-          const shelfZ = cz - 5.7;
-          addFurniture(new THREE.BoxGeometry(4, 5.3, 1), "woodDark", shelfX, 2.65, shelfZ);
-          addFurniture(new THREE.BoxGeometry(3.8, 0.08, 0.9), "wood", shelfX, 1.3, shelfZ);
-          addFurniture(new THREE.BoxGeometry(3.8, 0.08, 0.9), "wood", shelfX, 2.7, shelfZ);
-          addFurniture(new THREE.BoxGeometry(3.8, 0.08, 0.9), "wood", shelfX, 4.1, shelfZ);
-          for (let i = 0; i < 6; i++) {
-            addFurniture(
-              new THREE.BoxGeometry(0.24, 0.9 + (i % 2) * 0.2, 0.55),
-              "fabric",
-              shelfX - 1.4 + i * 0.5,
-              1.8,
-              shelfZ + 0.05
-            );
-          }
-        }
-
-        if (room.id === "kitchen") {
-          const nx = room.bounds.x + 4.5;
-          const nz = room.bounds.z + 1;
-          addFurniture(new THREE.BoxGeometry(8, 2.6, 1.8), "woodDark", nx, 1.3, nz);
-          addFurniture(new THREE.BoxGeometry(8.2, 0.2, 2), "stone", nx, 2.7, nz);
-          addFurniture(new THREE.BoxGeometry(8, 2.0, 1.2), "wood", nx, 5.5, nz - 0.2);
-
-          const isX = cx + 1.5;
-          const isZ = cz + 1;
-          addFurniture(new THREE.BoxGeometry(4.5, 2.6, 2.2), "woodDark", isX, 1.3, isZ);
-          addFurniture(new THREE.BoxGeometry(5, 0.2, 2.6), "stone", isX, 2.7, isZ);
-          [-1.2, 1.2].forEach((sx) => {
-            const sX = isX + sx;
-            const sZ = isZ + 2;
-            addFurniture(new THREE.CylinderGeometry(0.6, 0.6, 0.2, 8), "wood", sX, 2.5, sZ);
-            addFurniture(new THREE.CylinderGeometry(0.08, 0.08, 2.4, 6), "metal", sX, 1.3, sZ);
-            addFurniture(new THREE.CylinderGeometry(0.5, 0.5, 0.05, 8), "metal", sX, 0.05, sZ);
-          });
-          addFurniture(
-            new THREE.BoxGeometry(2.8, 6, 2.8),
-            "stone",
-            room.bounds.x + room.bounds.w - 1.8,
-            3,
-            room.bounds.z + 1.5
-          );
-          addFurniture(new THREE.BoxGeometry(2.5, 0.05, 2), "metal", nx - 1, 2.85, nz);
-          addFurniture(new THREE.CylinderGeometry(0.25, 0.25, 0.06, 8), "metal", nx - 1.6, 2.92, nz - 0.4);
-          addFurniture(new THREE.CylinderGeometry(0.25, 0.25, 0.06, 8), "metal", nx - 0.4, 2.92, nz - 0.4);
-          addFurniture(new THREE.CylinderGeometry(0.25, 0.25, 0.06, 8), "metal", nx - 1.6, 2.92, nz + 0.4);
-          addFurniture(new THREE.CylinderGeometry(0.25, 0.25, 0.06, 8), "metal", nx - 0.4, 2.92, nz + 0.4);
-        }
-
-        if (room.id === "bath") {
-          // Walk-in shower — back-left corner using room walls (x=-11, z=7) as two sides
-          const shW = 3.0, shD = 3.0, shH = 7.0;
-          const shX = room.bounds.x + shW / 2;          // -9.5
-          const shZ = room.bounds.z + shD / 2;          // 8.5
-          // Shower pan
-          addFurniture(new THREE.BoxGeometry(shW, 0.1, shD), "stone", shX, 0.05, shZ);
-          // Drain disc
-          addFurniture(new THREE.CylinderGeometry(0.1, 0.1, 0.04, 8), "metal", shX + 0.4, 0.1, shZ + 0.4);
-          // Right glass panel (open side in x direction, at x=-8)
-          addFurniture(new THREE.BoxGeometry(0.12, shH, shD), "glass", room.bounds.x + shW, shH / 2, shZ);
-          // Front glass panels with centre door gap (z direction, at z=10)
-          addFurniture(new THREE.BoxGeometry(1.0, shH, 0.12), "glass", room.bounds.x + 0.5,       shH / 2, room.bounds.z + shD);
-          addFurniture(new THREE.BoxGeometry(1.0, shH, 0.12), "glass", room.bounds.x + shW - 0.5, shH / 2, room.bounds.z + shD);
-          // Shower valve on left room wall interior
-          addFurniture(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 6), "metalBrass", room.bounds.x + 0.18, 4.0, shZ - 0.4);
-          // Shower arm (horizontal pipe along z)
-          addFurniture(new THREE.BoxGeometry(0.05, 0.05, 0.55), "metalBrass", room.bounds.x + 0.18, 6.4, shZ - 0.68);
-          // Shower head disc
-          addFurniture(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 8), "metalBrass", room.bounds.x + 0.18, 6.4, shZ - 0.95);
-
-          // Marble vanity — along right wall (x = -3)
-          const vDepth = 1.3, vLen = 3.8;
-          const vX = room.bounds.x + room.bounds.w - vDepth / 2;  // -3.65
-          const vZ = cz;                                           // 11
-          // Cabinet
-          addFurniture(new THREE.BoxGeometry(vDepth, 2.3, vLen), "woodDark", vX, 1.15, vZ);
-          // Marble countertop
-          addFurniture(new THREE.BoxGeometry(vDepth + 0.1, 0.1, vLen + 0.1), "stone", vX, 2.35, vZ);
-          // Undermount sink basin
-          addFurniture(new THREE.BoxGeometry(0.65, 0.14, 1.0), "stone", vX - 0.1, 2.46, vZ);
-          // Faucet riser
-          addFurniture(new THREE.CylinderGeometry(0.03, 0.03, 0.48, 6), "metalBrass", vX - 0.1, 2.69, vZ - 0.32);
-          // Large mirror mounted flush on right wall
-          addFurniture(new THREE.BoxGeometry(0.04, 2.7, vLen), "glass", room.bounds.x + room.bounds.w - 0.05, 4.0, vZ);
-          // Towel bar on right wall beside mirror
-          addFurniture(new THREE.BoxGeometry(0.05, 0.04, 1.2), "metalBrass", room.bounds.x + room.bounds.w - 0.06, 3.3, vZ + vLen / 2 - 0.5);
-          // Bath mat in front of vanity
-          addFurniture(new THREE.BoxGeometry(0.8, 0.02, 2.0), "fabric", vX - vDepth * 0.7, 0.01, vZ);
-
-          // Toilet — between shower and vanity, flush against back wall (z=7)
-          const tX = -6.0;
-          const tBowlZ = room.bounds.z + 1.25;           // 8.25
-          // Bowl
-          addFurniture(new THREE.BoxGeometry(1.2, 0.85, 1.55), "stone", tX, 0.425, tBowlZ);
-          // Seat lid
-          addFurniture(new THREE.BoxGeometry(1.05, 0.07, 1.3), "stone", tX, 0.895, tBowlZ);
-          // Tank against back wall
-          addFurniture(new THREE.BoxGeometry(1.0, 1.3, 0.25), "stone", tX, 1.25, room.bounds.z + 0.27);
-        }
-
-        if (room.id === "bed") {
-          const bdX = cx;
-          const bdZ = cz - 1;
-          addFurniture(new THREE.BoxGeometry(7, 0.6, 7.5), "woodDark", bdX, 0.4, bdZ);
-          addFurniture(new THREE.BoxGeometry(6.6, 1.0, 7.0), "fabric", bdX, 1.2, bdZ);
-          addFurniture(new THREE.BoxGeometry(7.2, 3.5, 0.4), "upholstery", bdX, 2.5, bdZ - 3.7);
-          addFurniture(new THREE.BoxGeometry(2.5, 0.4, 1.2), "fabric", bdX - 1.5, 1.95, bdZ - 2.7);
-          addFurniture(new THREE.BoxGeometry(2.5, 0.4, 1.2), "fabric", bdX + 1.5, 1.95, bdZ - 2.7);
-          [-4.5, 4.5].forEach((nsdx) => {
-            const nsX = bdX + nsdx;
-            const nsZ = bdZ - 3;
-            addFurniture(new THREE.BoxGeometry(1.8, 2.0, 1.6), "wood", nsX, 1.0, nsZ);
-            addFurniture(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6), "metalBrass", nsX, 2.85, nsZ);
-          });
-          addFurniture(new THREE.BoxGeometry(5, 0.4, 1.5), "upholstery", bdX, 1.2, bdZ + 4.2);
-          addFurniture(
-            new THREE.BoxGeometry(1.8, 3.5, 5),
-            "wood",
-            room.bounds.x + room.bounds.w - 1.5,
-            1.75,
-            cz + 2
-          );
-        }
-
-        if (room.id === "office") {
-          const dX = cx;
-          const dZ = cz - 3.5;
-          addFurniture(new THREE.BoxGeometry(6, 0.2, 2.6), "wood", dX, 2.5, dZ);
-          addFurniture(new THREE.BoxGeometry(0.15, 2.4, 2.4), "woodDark", dX - 2.9, 1.2, dZ);
-          addFurniture(new THREE.BoxGeometry(0.15, 2.4, 2.4), "woodDark", dX + 2.9, 1.2, dZ);
-          addFurniture(new THREE.BoxGeometry(3, 1.8, 0.15), "metal", dX - 0.5, 3.7, dZ - 0.5);
-
-          const chX = dX;
-          const chZ = dZ + 2.5;
-          addFurniture(new THREE.CylinderGeometry(0.15, 0.15, 0.1, 8), "metal", chX, 0.05, chZ);
-          addFurniture(new THREE.BoxGeometry(1.8, 0.4, 1.8), "upholstery", chX, 1.7, chZ);
-          addFurniture(new THREE.BoxGeometry(1.6, 2.2, 0.3), "upholstery", chX, 2.9, chZ - 0.8);
-          addFurniture(
-            new THREE.BoxGeometry(0.8, 6, 4),
-            "woodDark",
-            room.bounds.x + room.bounds.w - 0.6,
-            3.0,
-            cz + 1.5
-          );
-          addFurniture(
-            new THREE.BoxGeometry(0.75, 0.08, 3.8),
-            "wood",
-            room.bounds.x + room.bounds.w - 0.6,
-            2.2,
-            cz + 1.5
-          );
-          addFurniture(
-            new THREE.BoxGeometry(0.75, 0.08, 3.8),
-            "wood",
-            room.bounds.x + room.bounds.w - 0.6,
-            3.6,
-            cz + 1.5
-          );
-        }
-
-        group.add(roomShell);
-        group.add(roomFurniture);
-        group.add(roomDecor);
-        scene.add(group);
-        roomGroupsRef.current[room.id] = group;
-
-        room.hotspots.forEach((hotspot, idx) => {
-          hotspotsRef.current.push({ id: `${room.id}-${idx}`, roomId: room.id, hotspot });
-        });
-      }
-      if (!aborted) {
-        setRoom(0);
-        setSceneReady(true);
-        // If the section is already in view by the time rooms finish loading, start the RAF
-        if (visibleRef.current && !runningRef.current) {
-          runningRef.current = true;
-          frameRef.current = requestAnimationFrame(loop);
-        }
-      }
-      })();
-
-      const onResize = () => {
-        if (!rootRef.current || !cameraRef.current || !rendererRef.current) return;
-        const width = rootRef.current.clientWidth;
-        const height = rootRef.current.clientHeight;
-        cameraRef.current.aspect = width / height;
-        cameraRef.current.updateProjectionMatrix();
-        rendererRef.current.setSize(width, height, false);
-      };
-      onResize();
-      window.addEventListener("resize", onResize);
-
-      const onPointerDown = (e: PointerEvent) => {
-        pointerRef.current.down = true;
-        pointerRef.current.x = e.clientX;
-        pointerRef.current.y = e.clientY;
-      };
-      const onPointerMove = (e: PointerEvent) => {
-        if (!pointerRef.current.down) return;
-        const dx = e.clientX - pointerRef.current.x;
-        const dy = e.clientY - pointerRef.current.y;
-        pointerRef.current.x = e.clientX;
-        pointerRef.current.y = e.clientY;
-        if (orbitModeRef.current) {
-          orbitAngleRef.current -= dx * 0.005;
-        } else {
-          pointerRef.current.yaw = Math.max(-0.7, Math.min(0.7, pointerRef.current.yaw - dx * 0.003));
-          pointerRef.current.pitch = Math.max(-0.4, Math.min(0.4, pointerRef.current.pitch - dy * 0.002));
-        }
-      };
-      const onPointerUp = () => {
-        pointerRef.current.down = false;
-      };
-      const onWheel = (e: WheelEvent) => {
-        if (!orbitModeRef.current || !cameraRef.current) return;
-        const factor = 1 + e.deltaY * 0.0008;
-        cameraRef.current.position.multiplyScalar(factor);
-      };
-
-      canvas.addEventListener("pointerdown", onPointerDown);
-      canvas.addEventListener("pointermove", onPointerMove);
-      window.addEventListener("pointerup", onPointerUp);
-      canvas.addEventListener("wheel", onWheel, { passive: true });
-
-      return () => {
-        window.removeEventListener("resize", onResize);
-        window.removeEventListener("pointerup", onPointerUp);
-        canvas.removeEventListener("pointerdown", onPointerDown);
-        canvas.removeEventListener("pointermove", onPointerMove);
-        canvas.removeEventListener("wheel", onWheel);
-        renderer.dispose();
-      };
-    };
-
-    // Fires when the section is 1500px away — starts Three.js init before user arrives.
-    // requestIdleCallback ensures the GPU work runs between scroll frames, not during them.
-    const preloadObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !initializedRef.current) {
-          initializedRef.current = true;
-          if (typeof requestIdleCallback === "function") {
-            const id = requestIdleCallback(
-              () => { if (!aborted) cleanupScene = initScene(); },
-              { timeout: 1200 }
-            );
-            cancelInit = () => cancelIdleCallback(id);
-          } else {
-            const id = setTimeout(() => { if (!aborted) cleanupScene = initScene(); }, 0);
-            cancelInit = () => clearTimeout(id);
-          }
-        }
-      },
-      { rootMargin: "1500px" }
-    );
-
-    // Pauses/resumes the RAF loop when the section enters or leaves the viewport.
-    const visibilityObserver = new IntersectionObserver(
-      ([entry]) => {
-        visibleRef.current = entry.isIntersecting;
-        if (entry.isIntersecting) {
-          if (rendererRef.current && !runningRef.current) {
-            runningRef.current = true;
-            frameRef.current = requestAnimationFrame(loop);
-          }
-        } else {
-          if (runningRef.current) {
-            cancelAnimationFrame(frameRef.current);
-            runningRef.current = false;
-          }
-        }
-      },
-      { threshold: 0 }
-    );
-
-    preloadObserver.observe(root);
-    visibilityObserver.observe(root);
-
-    return () => {
-      aborted = true;
-      cancelInit?.();
-      preloadObserver.disconnect();
-      visibilityObserver.disconnect();
-      cancelAnimationFrame(frameRef.current);
-      runningRef.current = false;
-      cleanupScene?.();
-    };
-  }, [setRoom]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setVisitSeconds((s) => s + 1), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    currentRoomRef.current = currentRoomIdx;
-    applyRoomHighlight(ROOMS[currentRoomIdx].id, orbitMode);
-  }, [applyRoomHighlight, currentRoomIdx, orbitMode]);
-
-  const exitOrbitAndGo = useCallback(
-    (idx: number) => {
-      orbitModeRef.current = false;
-      setOrbitMode(false);
-      setRoom(idx);
-    },
-    [setRoom]
-  );
-
-  const goPrev = useCallback(() => {
-    exitOrbitAndGo((currentRoomIdx - 1 + ROOMS.length) % ROOMS.length);
-  }, [currentRoomIdx, exitOrbitAndGo]);
-
-  const goNext = useCallback(() => {
-    exitOrbitAndGo((currentRoomIdx + 1) % ROOMS.length);
-  }, [currentRoomIdx, exitOrbitAndGo]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.tagName === "INPUT") return;
-      if (e.key === "ArrowRight") { e.preventDefault(); goNext(); }
-      if (e.key === "ArrowLeft") { e.preventDefault(); goPrev(); }
-      if (e.key === "a" || e.key === "A") setAiOpen((v) => !v);
-      if (e.key === "o" || e.key === "O") setOrbitMode((v) => !v);
-      if (e.key === "r" || e.key === "R") setRedesignOpen((v) => !v);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [goNext, goPrev]);
-
-  const openSpatialAnswer = useCallback((hotspot: ProjectedHotspot) => {
-    if (floatTimerRef.current) clearTimeout(floatTimerRef.current);
-    setFloatAnswer({ visible: true, text: hotspot.ai, left: hotspot.left, top: hotspot.top });
-    floatTimerRef.current = setTimeout(() => {
-      setFloatAnswer((f) => ({ ...f, visible: false }));
-    }, 5200);
-  }, []);
-
-  const onSelectWall = useCallback(
-    (index: number) => {
-      setSelectedWall(index);
-      applyWall(WALL_SWATCHES[index].hex);
-    },
-    [applyWall]
-  );
-
-  const onSelectFloor = useCallback(
-    (index: number) => {
-      setSelectedFloor(index);
-      applyFloor(FLOOR_SWATCHES[index].hex);
-    },
-    [applyFloor]
-  );
-
-  const onSelectFurniture = useCallback(
-    (id: FurnitureStyleId) => {
-      setSelectedFurniture(id);
-      applyFurniture(id);
-    },
-    [applyFurniture]
-  );
-
-  const resetRedesign = useCallback(() => {
-    setSelectedWall(0);
-    setSelectedFloor(0);
-    setSelectedFurniture("original");
-    applyWall(null);
-    applyFloor(null);
-    applyFurniture("original");
-  }, [applyWall, applyFloor, applyFurniture]);
+  const isPano   = Boolean(currentRoom.panoSrc);
+  const isZoomed = !isPano && zoomLabel > 1.05;
 
   return (
-    <section className={`${styles.wrapper} relative`} id="buyer-tour">
-      <div className={styles.tourRoot} ref={rootRef}>
-        <canvas
-          className={styles.canvas}
-          ref={canvasRef}
-          style={{ opacity: sceneReady ? 1 : 0, transition: "opacity 0.5s ease" }}
-        />
+    <section className="w-screen ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] py-10 max-[980px]:py-6 max-sm:py-0 relative" id="buyer-tour">
+      <div
+        className="relative overflow-hidden h-[clamp(260px,50vw,720px)] border-t border-b border-[rgba(20,17,13,0.12)] bg-[#1a1613]"
+        ref={rootRef}
+        style={{ cursor: isPano ? "default" : isZoomed ? (dragging.current ? "grabbing" : "grab") : "zoom-in" }}
+        onClick={!isPano ? onImageClick : undefined}
+        onMouseDown={!isPano ? onMouseDown : undefined}
+        onMouseMove={!isPano ? onMouseMove : undefined}
+        onMouseUp={!isPano ? onMouseUp : undefined}
+        onMouseLeave={!isPano ? onMouseUp : undefined}
+        onTouchStart={!isPano ? onTouchStart : undefined}
+        onTouchMove={!isPano ? onTouchMove : undefined}
+        onTouchEnd={!isPano ? onTouchEnd : undefined}
+      >
+        {/* Image area — spherical PSV or flat pan/zoom */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          {isPano ? (
+            <ReactPhotoSphereViewer
+              src={currentRoom.panoSrc!}
+              height="100%"
+              width="100%"
+              navbar={false}
+              littlePlanet={false}
+            />
+          ) : (
+            <div
+              ref={wrapperRef}
+              style={{ width: "100%", height: "100%", transformOrigin: "center center", willChange: "transform" }}
+            >
+              {/* Room images */}
+              {ROOMS.map((room, i) => (
+                <img
+                  key={room.id}
+                  src={room.imgSrc}
+                  alt={room.name}
+                  loading="eager"
+                  draggable={false}
+                  className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-[400ms] ease-in select-none pointer-events-none ${i === currentRoomIdx ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
 
-        {!sceneReady && (
-          <div className={styles.sceneLoader}>
-            <span className={styles.sceneLoaderDot} />
-            <span className={styles.sceneLoaderDot} />
-            <span className={styles.sceneLoaderDot} />
+              {/* Hotspot pins — inside wrapper so they scale and pan with the image */}
+              {currentRoom.hotspots.map((hs, i) => {
+                const id       = `${currentRoom.id}-${i}`;
+                const isActive = activeHotspotId === id;
+                return (
+                  <div
+                    key={id}
+                    className="absolute z-[12] pointer-events-none"
+                    style={{
+                      left: `${hs.px}%`,
+                      top:  `${hs.py}%`,
+                      transform: "translate(-50%,-50%) scale(var(--hs-scale,1))",
+                      transformOrigin: "center center",
+                    }}
+                  >
+                    {!isActive && (
+                      <span className="absolute -inset-[6px] rounded-full border-[1.5px] border-[rgba(200,101,26,0.5)] animate-hs-pulse pointer-events-none" />
+                    )}
+
+                    <div
+                      className={`absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 whitespace-nowrap border px-[7px] py-[3px] text-[10px] tracking-[0.08em] font-mono pointer-events-auto cursor-pointer transition-colors duration-150 ${isActive ? "bg-[#14110d] text-[#f3efe7] border-[#14110d]" : "border-[rgba(20,17,13,0.16)] bg-[rgba(255,255,255,0.94)] hover:bg-[#14110d] hover:text-[#f3efe7]"}`}
+                      onClick={(e) => { e.stopPropagation(); handleHotspotClick(id, hs.px, hs.py, hs.ai); }}
+                    >
+                      {hs.label}
+                    </div>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleHotspotClick(id, hs.px, hs.py, hs.ai); }}
+                      aria-label={hs.label}
+                      className={`relative w-[22px] h-[22px] rounded-full border-2 cursor-pointer p-0 flex items-center justify-center pointer-events-auto transition-colors duration-150 ${
+                        isActive
+                          ? "bg-[#14110d] text-[#f3efe7] border-[#14110d]"
+                          : hs.kind === "concern"
+                            ? "border-[#c8651a] text-[#c8651a] bg-[rgba(243,239,231,0.92)] hover:bg-[#c8651a] hover:text-[#f3efe7] hover:border-[#c8651a]"
+                            : "border-[#14110d] bg-[rgba(243,239,231,0.92)] text-[#14110d] hover:bg-[#14110d] hover:text-[#f3efe7]"
+                      }`}
+                      type="button"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8"  x2="12" y2="8"  strokeWidth="3" />
+                        <line x1="12" y1="12" x2="12" y2="16" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Zoom controls — only for flat viewer */}
+        {!isPano && (
+          <div className="absolute top-3 left-[18px] z-20 flex flex-col gap-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); animateToZoom(Math.min(ZOOM_MAX, zoomRef.current * 1.5)); }}
+              aria-label="Zoom in"
+              className="w-8 h-8 border border-[rgba(20,17,13,0.2)] bg-[rgba(255,255,255,0.9)] text-[#14110d] text-base cursor-pointer flex items-center justify-center p-0 font-mono hover:bg-[#14110d] hover:text-[#f3efe7]"
+              type="button"
+            >+</button>
+            <button
+              onClick={(e) => { e.stopPropagation(); animateToZoom(Math.max(ZOOM_MIN, zoomRef.current / 1.5)); }}
+              aria-label="Zoom out"
+              className="w-8 h-8 border border-[rgba(20,17,13,0.2)] bg-[rgba(255,255,255,0.9)] text-[#14110d] text-base cursor-pointer flex items-center justify-center p-0 font-mono hover:bg-[#14110d] hover:text-[#f3efe7]"
+              type="button"
+            >−</button>
+            {isZoomed && (
+              <button
+                onClick={(e) => { e.stopPropagation(); resetPanoTransform(); }}
+                aria-label="Reset zoom"
+                className="w-8 h-8 border border-[rgba(20,17,13,0.2)] bg-[rgba(255,255,255,0.9)] text-[#14110d] text-base cursor-pointer flex items-center justify-center p-0 font-mono hover:bg-[#14110d] hover:text-[#f3efe7]"
+                type="button"
+              >↺</button>
+            )}
           </div>
         )}
+
+        {/* Zoom badge — only for flat viewer */}
+        {isZoomed && (
+          <div className="absolute top-3 left-[58px] z-20 px-[7px] py-1 border border-[rgba(20,17,13,0.16)] bg-[rgba(255,255,255,0.9)] font-mono text-[10px] tracking-[0.1em] pointer-events-none">
+            {Math.round(zoomLabel * 100)}%
+          </div>
+        )}
+
+        {/* Click hint — flat viewer only, at 1× zoom */}
+        {!isPano && !isZoomed && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-3 py-[5px] border border-[rgba(255,255,255,0.18)] bg-[rgba(0,0,0,0.38)] font-mono text-[9px] tracking-[0.14em] uppercase text-white/70 pointer-events-none">
+            Click anywhere to explore
+          </div>
+        )}
+
+        {/* Float answer */}
+        <div
+          className={`absolute z-[24] -translate-x-1/2 -translate-y-[105%] border border-[rgba(20,17,13,0.2)] bg-[rgba(255,255,255,0.98)] p-[10px] max-w-[280px] text-xs leading-[1.4] transition-opacity duration-200 max-sm:max-w-[200px] max-sm:p-2 max-sm:text-[11px] ${floatAnswer.visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+          style={{ left: floatAnswer.left, top: floatAnswer.top }}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-mono text-[9px] tracking-[0.12em] uppercase text-[#c8651a]">From the scan</span>
+            <button
+              className="shrink-0 w-[18px] h-[18px] border border-[rgba(20,17,13,0.18)] bg-transparent text-[#6b6354] text-[13px] cursor-pointer flex items-center justify-center p-0 hover:bg-[#14110d] hover:text-[#f3efe7] hover:border-[#14110d]"
+              onClick={(e) => { e.stopPropagation(); closeFloatAnswer(); }}
+              aria-label="Close"
+              type="button"
+            >×</button>
+          </div>
+          <span>{floatAnswer.text}</span>
+        </div>
 
         <BuyerTourHUD
           aiOpen={aiOpen}
           currentRoom={currentRoom}
           currentRoomIdx={currentRoomIdx}
-          floatAnswer={floatAnswer}
           onAiToggle={() => setAiOpen((v) => !v)}
-          onHotspotClick={openSpatialAnswer}
           onNext={goNext}
-          onOrbitToggle={() => setOrbitMode((v) => !v)}
+          onPanToggle={() => setPanMode((v) => !v)}
           onPrev={goPrev}
-          onRedesignToggle={() => setRedesignOpen((v) => !v)}
-          onRoomSelect={exitOrbitAndGo}
-          orbitMode={orbitMode}
-          projectedHotspots={projectedHotspots}
-          redesignOpen={redesignOpen}
+          onRoomSelect={selectRoom}
+          panMode={panMode}
           rooms={ROOMS}
           visitSeconds={visitSeconds}
         />
@@ -814,17 +532,6 @@ export default function BuyerTourSection() {
           onInputChange={setAiInput}
           open={aiOpen}
           suggestions={roomSuggestions}
-        />
-
-        <BuyerTourRedesign
-          onReset={resetRedesign}
-          onSelectFloor={onSelectFloor}
-          onSelectFurniture={onSelectFurniture}
-          onSelectWall={onSelectWall}
-          open={redesignOpen}
-          selectedFloor={selectedFloor}
-          selectedFurniture={selectedFurniture}
-          selectedWall={selectedWall}
         />
       </div>
     </section>

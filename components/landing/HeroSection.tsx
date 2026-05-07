@@ -23,8 +23,19 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative -mt-24 overflow-hidden rounded-b-[60px] bg-inverse-surface pb-24 pt-60 shadow-2xl md:pb-28">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/20 via-inverse-surface to-inverse-surface" />
+    <section className="relative -mt-24 flex min-h-screen flex-col justify-center overflow-hidden rounded-b-[60px] bg-inverse-surface pb-24 pt-48 shadow-2xl md:pb-32">
+      {/* Background video */}
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        src="/hero_video.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+      {/* Dark overlay so text stays legible */}
+      <div className="absolute inset-0 bg-inverse-surface/50" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
       <div className="relative z-10 mx-auto max-w-7xl px-6">
         <div className="mx-auto max-w-4xl space-y-8 text-center">
           <h1 className="font-display text-[clamp(40px,6vw,72px)] font-bold leading-[1.1] tracking-tight text-white">

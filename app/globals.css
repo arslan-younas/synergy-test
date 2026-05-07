@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@photo-sphere-viewer/core/index.css";
 
 /* Material 3 + motion tokens (Tailwind v4 @tailwindcss/postcss scans this file). */
 @keyframes fadeUp {
@@ -69,6 +70,11 @@
   50% {
     transform: translateX(25%);
   }
+}
+
+@keyframes hsPulse {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0;   }
 }
 
 @theme {
@@ -151,6 +157,7 @@
   --animate-pring-delay: pring 3s 0.6s infinite;
   --animate-hotspot-ring: pring 2.5s infinite;
   --animate-scanline: scan 5s ease-in-out infinite;
+  --animate-hs-pulse: hsPulse 1.8s ease-out infinite;
 }
 
 html {
