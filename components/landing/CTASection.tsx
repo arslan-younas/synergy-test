@@ -3,48 +3,86 @@
 import { useState } from "react";
 
 export default function CTASection() {
+  const [submitted, setSubmitted] = useState(false);
+  const [zip, setZip] = useState("");
   const [email, setEmail] = useState("");
-  const [note, setNote] = useState("Applications reviewed within 48 hours · No credit card required");
 
-  const joinList = () => {
-    if (!email.includes("@")) {
-      setNote("Please enter a valid email before applying.");
-      return;
-    }
-    setNote("Application received. We will reach out within 48 hours.");
-    setEmail("");
+  const canSubmit = zip.length === 5 && email.includes("@");
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    setSubmitted(true);
   };
 
   return (
-    <section id="cta" className="relative scroll-mt-28 px-6 pb-24 pt-[100px] lg:px-[52px] lg:pb-28 lg:pt-[100px]">
-      <div className="relative mx-auto max-w-[900px] overflow-hidden rounded-[28px] border border-outline-variant bg-gradient-to-br from-white to-surface-container-low px-10 py-[70px] text-center backdrop-blur-md lg:px-[52px] before:pointer-events-none before:absolute before:left-1/2 before:top-[-200px] before:h-[600px] before:w-[600px] before:-translate-x-1/2 before:rounded-full before:bg-[radial-gradient(circle,rgba(101,0,225,0.1),transparent_60%)] before:content-['']">
-        <h2 className="relative mb-4 font-display text-[clamp(36px,4vw,52px)] font-medium tracking-tight text-on-surface">
-          Secure Your{" "}
-          <em className="bg-gradient-to-br from-inverse-primary to-primary bg-clip-text italic text-transparent">Zip Code.</em>
+    <section id="cta" className="scroll-mt-20 relative overflow-hidden border-t border-white/7 bg-ink px-6 py-[88px] text-center lg:px-14">
+      {/* Glow */}
+      <div className="pointer-events-none absolute bottom-[-150px] left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(124,92,252,0.09)_0%,transparent_65%)]" />
+
+      <div className="relative z-10 mx-auto max-w-[640px]">
+        <span className="mb-4 block font-mono text-[10px] uppercase tracking-[0.18em] text-accent-light">
+          SynergySo pilots by market
+        </span>
+        <h2 className="mb-3.5 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.15] tracking-tight text-white">
+          Secure your zip code before another agent in your market does.
         </h2>
-        <p className="relative mx-auto mb-9 max-w-md text-sm leading-relaxed text-on-surface-variant">
-          We are currently accepting 10 visionary agents for our NY Metro Pilot. Be the first to bring phone-native AI tours to your market.
+        <p className="mx-auto mb-0 max-w-[560px] text-base leading-[1.75] text-white/50">
+          SynergySo&apos;s early access program is limited by market — starting in the New York metro. When you secure your zip code, you&apos;re the only SynergySo agent in that area during the pilot.
         </p>
-        <div className="relative mx-auto flex max-w-[440px] items-center rounded-full border border-outline-variant bg-white p-[5px] transition focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(101,0,225,0.12)]">
-          <input
-            id="email-in"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="agent@luxuryhomes.com"
-            className="min-w-0 flex-1 border-0 bg-transparent px-5 py-3 text-[13.5px] text-on-surface outline-none placeholder:text-on-surface-variant/50"
-          />
-          <button
-            type="button"
-            className="shrink-0 rounded-full bg-primary px-[26px] py-3 text-[13px] font-semibold text-on-primary transition hover:bg-primary/90"
-            onClick={joinList}
-          >
-            Apply
-          </button>
-        </div>
-        <p id="wl-note" className="relative mt-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant/80">
-          {note}
-        </p>
+
+        {!submitted && (
+          <div className="mx-auto mt-10 max-w-[480px] rounded-xl border border-white/7 bg-ink-soft p-8">
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="mb-2 block text-left font-mono text-[10px] uppercase tracking-[0.13em] text-white/45">
+                  Your zip code
+                </label>
+                <input
+                  type="text"
+                  maxLength={5}
+                  value={zip}
+                  onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  placeholder="10001"
+                  className="w-full rounded-[7px] border border-white/10 bg-white/5 px-4 py-3 text-left text-xl font-bold tracking-[0.08em] text-white outline-none placeholder:text-white/20 focus:border-accent/45 transition"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-left font-mono text-[10px] uppercase tracking-[0.13em] text-white/45">
+                  Your email address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                  placeholder="you@brokerage.com"
+                  className="w-full rounded-[7px] border border-white/10 bg-white/5 px-4 py-3 text-base text-white outline-none placeholder:text-white/20 focus:border-accent/45 transition"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className={`w-full rounded-[7px] py-3 text-sm font-semibold text-white transition ${canSubmit ? "bg-accent hover:bg-accent-dark" : "cursor-not-allowed bg-white/10 text-white/30"}`}
+              >
+                Send →
+              </button>
+            </div>
+            <p className="mt-4 font-mono text-sm text-white/45">
+              Early access is free · No credit card required · We&apos;ll reach out within 24 hours
+            </p>
+          </div>
+        )}
+
+        {submitted && (
+          <div className="mx-auto mt-10 max-w-120 rounded-xl border border-accent-green/20 bg-accent-green/6 px-9 py-9">
+            <div className="mb-3 text-[32px]">✓</div>
+            <div className="mb-1.5 text-xl font-bold text-white">You&apos;re on the list.</div>
+            <p className="text-sm leading-relaxed text-white/45">
+              Zip code <strong className="text-accent-green">{zip} </strong> is reserved for you. We&apos;ll reach out within 24 hours with next steps.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

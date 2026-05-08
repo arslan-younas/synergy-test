@@ -1,124 +1,123 @@
-type Status = "yes" | "no";
-
-function StatusIcon({ status }: { status: Status }) {
-  if (status === "yes") {
-    return <span className="material-symbols-outlined text-2xl font-bold text-green-500">check</span>;
-  }
-  if (status === "no") {
-    return <span className="material-symbols-outlined text-2xl font-bold text-red-400">close</span>;
-  }
+function Yes() {
+  return <span className="text-base text-green-600">✓</span>;
+}
+function No() {
+  return <span className="text-base text-red-500">✗</span>;
+}
+function Part() {
+  return <span className="text-sm text-amber-600">~</span>;
 }
 
-const MATRIX_ROWS: Array<
-  | {
-      feature: string;
-      kind: "text";
-      synergy: string;
-      matterport: string;
-      zillow: string;
-    }
-  | {
-      feature: string;
-      kind: "status";
-      synergy: Status;
-      matterport: Status;
-      zillow: Status;
-    }
-> = [
+const ROWS: Array<{
+  feature: string;
+  synergy: React.ReactNode;
+  matterport: React.ReactNode;
+  zillow: React.ReactNode;
+  giraffe: React.ReactNode;
+}> = [
   {
-    feature: "Hardware Required",
-    kind: "text",
-    synergy: "Smartphone Only",
-    matterport: "$3k+ Camera",
-    zillow: "Smartphone",
+    feature: "Phone-only capture",
+    synergy: <Yes />,
+    matterport: <Part />,
+    zillow: <Yes />,
+    giraffe: <No />,
   },
   {
-    feature: "AI Q&A Agent",
-    kind: "status",
-    synergy: "yes",
-    matterport: "no",
-    zillow: "no",
+    feature: "True 3D navigation",
+    synergy: <Yes />,
+    matterport: <Yes />,
+    zillow: <No />,
+    giraffe: <Yes />,
   },
   {
-    feature: "Virtual Staging",
-    kind: "text",
-    synergy: "yes",
-    matterport: "Expensive Add-on",
-    zillow: "no",
+    feature: "AI Q&A in tour",
+    synergy: <Yes />,
+    matterport: <No />,
+    zillow: <No />,
+    giraffe: <No />,
   },
   {
-    feature: "Processing Time",
-    kind: "text",
-    synergy: "< 15 mins",
-    matterport: "24-48 hours",
-    zillow: "Hours",
+    feature: "In-tour buyer call",
+    synergy: <Yes />,
+    matterport: <No />,
+    zillow: <No />,
+    giraffe: <No />,
   },
   {
-    feature: "Platform Fee",
-    kind: "text",
-    synergy: "$0 (Flat subscription)",
-    matterport: "Per-model hosting fees",
-    zillow: "Free (but limited use)",
+    feature: "Redesign layer",
+    synergy: <Yes />,
+    matterport: <No />,
+    zillow: <No />,
+    giraffe: <No />,
+  },
+  {
+    feature: "No buyer app needed",
+    synergy: <Yes />,
+    matterport: <Yes />,
+    zillow: <No />,
+    giraffe: <Yes />,
+  },
+  {
+    feature: "Agent analytics",
+    synergy: <Yes />,
+    matterport: <Part />,
+    zillow: <No />,
+    giraffe: <No />,
+  },
+  {
+    feature: "Price / month",
+    synergy: <span className="font-mono text-[12px] text-slate-600">$29–$49</span>,
+    matterport: <span className="font-mono text-[12px] text-slate-500">$69–$309</span>,
+    zillow: <span className="font-mono text-[12px] text-slate-500">Free*</span>,
+    giraffe: <span className="font-mono text-[12px] text-slate-500">~$149</span>,
   },
 ];
 
 export default function MatrixSection() {
   return (
-    <section id="compare" className="scroll-mt-28 border-y border-surface-variant bg-surface-container-low py-section-padding">
-      <div className="mx-auto max-w-7xl px-6">
-        <header className="mb-16 text-center">
-          <h2 className="font-display text-4xl font-bold tracking-tight text-on-background md:text-5xl">How we stack up</h2>
-        </header>
+    <section id="compare" className="scroll-mt-20 border-t border-slate-200 bg-light-1 px-6 py-[88px] lg:px-14">
+      <div className="mx-auto max-w-[1080px]">
+        <span className="mb-4 block font-mono text-[10px] uppercase tracking-[0.18em] text-accent">
+          How we stack up
+        </span>
+        <h2 className="mb-3 font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.15] tracking-tight text-ink">
+          The only tool with the full stack.
+        </h2>
+        <p className="mb-10 max-w-[580px] text-base leading-[1.75] text-slate-600">
+          Every competitor is missing at least two of SynergySo&apos;s five core differentiators. Most are missing three or four.
+        </p>
 
-        <div className="overflow-x-auto rounded-2xl border border-surface-variant bg-white shadow-sm">
-          <table className="w-full min-w-[800px] border-collapse text-left">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] border-collapse overflow-hidden rounded-xl border border-slate-200 bg-white">
             <thead>
-              <tr className="border-b-2 border-surface-variant bg-surface-container-lowest">
-                <th className="w-1/4 rounded-tl-2xl px-6 py-5 font-display text-lg font-semibold text-on-background">Feature</th>
-                <th className="w-1/4 border-x border-primary/10 bg-primary/5 px-6 py-5 font-display text-lg font-semibold text-primary">SynergySo</th>
-                <th className="w-1/4 px-6 py-5 font-display text-lg font-semibold text-on-surface-variant">Matterport</th>
-                <th className="w-1/4 rounded-tr-2xl px-6 py-5 font-display text-lg font-semibold text-on-surface-variant">Zillow 3D</th>
+              <tr className="bg-ink">
+                <th className="rounded-tl-xl px-[18px] py-3.5 text-left font-mono text-[9px] uppercase tracking-[0.12em] text-white/40">Feature</th>
+                <th className="border-x border-x-accent/20 bg-accent/8 px-[18px] py-3.5 text-center text-[13px] font-semibold text-accent-light">SynergySo</th>
+                <th className="px-[18px] py-3.5 text-center text-[13px] font-semibold text-white/40">Matterport</th>
+                <th className="px-[18px] py-3.5 text-center text-[13px] font-semibold text-white/40">Zillow 3D</th>
+                <th className="rounded-tr-xl px-[18px] py-3.5 text-center text-[13px] font-semibold text-white/40">Giraffe360</th>
               </tr>
             </thead>
             <tbody>
-              {MATRIX_ROWS.map((row, i) => {
-                const isLast = i === MATRIX_ROWS.length - 1;
-                return (
-                  <tr key={row.feature} className="border-b border-surface-variant last:border-b-0">
-                    <th scope="row" className={`px-6 py-5 text-sm font-semibold text-on-surface ${isLast ? "rounded-bl-2xl" : ""}`}>
-                      {row.feature}
-                    </th>
-                    <td className="border-x border-primary/10 bg-primary/5 px-6 py-5 text-sm font-medium text-primary">
-                      {row.kind === "text" ? (
-                        row.synergy === "yes" ? (
-                          <StatusIcon status="yes" />
-                        ) : (
-                          row.synergy
-                        )
-                      ) : (
-                        <StatusIcon status={row.synergy} />
-                      )}
-                    </td>
-                    <td className="px-6 py-5 text-sm text-slate-500">
-                      {row.kind === "text" ? (
-                        row.matterport === "no" ? (
-                          <StatusIcon status="no" />
-                        ) : (
-                          row.matterport
-                        )
-                      ) : (
-                        <StatusIcon status={row.matterport} />
-                      )}
-                    </td>
-                    <td className={`px-6 py-5 text-sm text-slate-500 ${isLast ? "rounded-br-2xl" : ""}`}>
-                      {row.kind === "text" ? (row.zillow === "no" ? <StatusIcon status="no" /> : row.zillow) : <StatusIcon status={row.zillow} />}
-                    </td>
-                  </tr>
-                );
-              })}
+              {ROWS.map((row, i) => (
+                <tr key={row.feature} className={i % 2 === 1 ? "bg-slate-50/60" : ""}>
+                  <td className="border-t border-slate-100 px-[18px] py-3 text-[13px] font-medium text-slate-700">
+                    {row.feature}
+                  </td>
+                  <td className="border-x border-x-accent/10 border-t border-slate-100 bg-accent/3 px-[18px] py-3 text-center">
+                    {row.synergy}
+                  </td>
+                  <td className="border-t border-slate-100 px-[18px] py-3 text-center">{row.matterport}</td>
+                  <td className="border-t border-slate-100 px-[18px] py-3 text-center">{row.zillow}</td>
+                  <td className="border-t border-slate-100 px-[18px] py-3 text-center">{row.giraffe}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+        <p className="mt-3.5 text-[12px] italic text-slate-500">
+          * Zillow 3D is free — but your client relationship belongs to Zillow. &nbsp;|&nbsp; Matterport is the category benchmark for enterprise. SynergySo is for the agent who needs to show a property tomorrow.
+        </p>
       </div>
     </section>
   );

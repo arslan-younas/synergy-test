@@ -1,49 +1,66 @@
-import { revealY } from "./tw";
+const TESTIMONIALS = [
+  {
+    quote:
+      "I built SynergySo because I was tired of choosing between an expensive contractor and a free tool that handed my clients to Zillow. I use it on every listing now. My buyers in other time zones feel like they've walked the property before they've booked a flight.",
+    initials: "B",
+    name: "Bryan T.",
+    role: "Independent Agent, New York Metro\nCo-founder, SynergySo",
+    placeholder: false,
+  },
+  {
+    quote:
+      "Pilot agent quote — to be replaced with a real testimonial from the weeks 5–8 pilot. Your most powerful closing story goes here.",
+    initials: "A",
+    name: "Pilot Agent",
+    role: "Independent Agent, New York Metro",
+    placeholder: true,
+  },
+  {
+    quote:
+      "Pilot agent quote — focused on ease of capture and how it changed the follow-up conversation with buyers who couldn't visit.",
+    initials: "A",
+    name: "Pilot Agent",
+    role: "Independent Agent, New York Metro",
+    placeholder: true,
+  },
+] as const;
 
 export default function TestimonialsSection() {
   return (
-    <section id="testimonials" className="scroll-mt-28 border-t border-slate-800 bg-inverse-surface py-section-padding text-white">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-20 text-center">
-          <h2 className="font-display text-4xl font-bold md:text-5xl">Trusted by Top Producers</h2>
-        </div>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {[
-            {
-              quote:
-                "Every week I send buyers a Zillow gallery and know it's not enough to close on. This is what the other 95% of agents have needed for years.",
-              initials: "BT",
-              name: "Bryan Thelismond",
-              role: "Founder · NY licensed agent",
-            },
-            {
-              quote:
-                "I've paid $400 for a Matterport scan on a $700k listing. The math never worked. Agent-paid pricing at this quality changes the economics completely.",
-              initials: "MR",
-              name: "Marcus R.",
-              role: "Pilot agent · Brooklyn, NY",
-            },
-            {
-              quote:
-                "My relocating buyers ask the same five questions on every listing. If the AI just answers them while I'm on another call, that's the product.",
-              initials: "AP",
-              name: "Ana P.",
-              role: "Pilot agent · Miami, FL",
-            },
-          ].map((t) => (
+    <section id="testimonials" className="scroll-mt-20 border-t border-white/7 bg-ink-mid px-6 py-[88px] lg:px-14">
+      <div className="mx-auto max-w-[1080px]">
+        <span className="mb-4 block text-center font-mono text-[10px] uppercase tracking-[0.18em] text-accent-light">
+          Trusted by agents who close
+        </span>
+        <h2 className="mb-[48px] text-center font-display text-[clamp(22px,3vw,40px)] font-bold leading-[1.15] tracking-tight text-white">
+          Real agents. Real listings. Real results.
+        </h2>
+
+        <div className="grid grid-cols-1 gap-[18px] md:grid-cols-3">
+          {TESTIMONIALS.map(({ quote, initials, name, role, placeholder }) => (
             <article
-              key={t.initials}
-              data-reveal
-              className={`${revealY} rounded-3xl border border-slate-700 bg-slate-800/40 p-10 transition-colors hover:bg-slate-800/60`}
+              key={name + role}
+              className={`rounded-xl border p-7 transition-colors ${placeholder ? "border-white/5 bg-white/2" : "border-white/7 bg-white/3 hover:bg-white/5"}`}
             >
-              <p className="mb-8 font-sans text-lg italic leading-relaxed text-slate-300">&quot;{t.quote}&quot;</p>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-700 font-display text-sm font-bold text-white">
-                  {t.initials}
+              <div className={`mb-3 font-serif text-[32px] leading-none text-accent ${placeholder ? "opacity-25" : "opacity-50"}`}>&ldquo;</div>
+              <p className={`mb-[22px] text-sm leading-[1.75] ${placeholder ? "italic text-white/45" : "text-white/70"}`}>
+                {quote}
+              </p>
+              <hr className={`mb-4 ${placeholder ? "border-white/4" : "border-white/6"}`} />
+              <div className="flex items-center gap-2.5">
+                <div className={`flex h-9.5 w-9.5 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold ${placeholder ? "border border-white/10 bg-white/5 text-white/35" : "border border-accent/22 bg-accent/15 text-accent-light"}`}>
+                  {initials}
                 </div>
                 <div>
-                  <div className="font-display font-bold text-white">{t.name}</div>
-                  <div className="text-sm text-slate-400">{t.role}</div>
+                  <div className={`text-sm font-semibold ${placeholder ? "text-white/50" : "text-white"}`}>{name}</div>
+                  <div className={`font-mono text-sm leading-[1.4] ${placeholder ? "text-white/30" : "text-white/40"}`}>
+                    {role.split("\n").map((line, i) => (
+                      <span key={i}>
+                        {i > 0 && <br />}
+                        {line}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </article>

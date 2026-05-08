@@ -33,6 +33,11 @@ export default function BuyerTourSection() {
   const momentumRaf     = useRef<number | null>(null);
   const zoomRaf         = useRef<number | null>(null);
 
+  // PSV (360° viewer) refs
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const psvRef    = useRef<any>(null);
+  const psvZoomed = useRef(false);
+
   const [currentRoomIdx, setCurrentRoomIdx] = useState(0);
   const [panMode, setPanMode]               = useState(false);
   const [zoomLabel, setZoomLabel]           = useState(1);
@@ -173,6 +178,7 @@ export default function BuyerTourSection() {
   /* Room change: intro zoom animation */
   useEffect(() => {
     currentRoomRef.current = currentRoomIdx;
+    psvZoomed.current = false;
     stopAllMotion();
     zoomRef.current = 1.55;
     panRef.current  = { x: 0, y: 0 };
@@ -360,6 +366,18 @@ export default function BuyerTourSection() {
   const isPano   = Boolean(currentRoom.panoSrc);
   const isZoomed = !isPano && zoomLabel > 1.05;
 
+  /* ── PSV click-to-zoom toggle ── */
+  const onPsvClick = useCallback(() => {
+    if (!psvRef.current) return;
+    if (psvZoomed.current) {
+      psvRef.current.animate({ zoom: 0, speed: "500rpm" });
+      psvZoomed.current = false;
+    } else {
+      psvRef.current.animate({ zoom: 60, speed: "500rpm" });
+      psvZoomed.current = true;
+    }
+  }, []);
+
   return (
     <section className="w-screen ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] py-10 max-[980px]:py-6 max-sm:py-0 relative" id="buyer-tour">
       <div
@@ -378,13 +396,23 @@ export default function BuyerTourSection() {
         {/* Image area — spherical PSV or flat pan/zoom */}
         <div className="absolute inset-0 w-full h-full overflow-hidden">
           {isPano ? (
-            <ReactPhotoSphereViewer
-              src={currentRoom.panoSrc!}
-              height="100%"
-              width="100%"
-              navbar={false}
-              littlePlanet={false}
-            />
+            <div style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+              <ReactPhotoSphereViewer
+                ref={psvRef}
+                src={currentRoom.panoSrc!}
+                height="100%"
+                width="100%"
+                navbar={false}
+                littlePlanet={false}
+                mousewheel={false}
+                touchmoveTwoFingers={false}
+                defaultZoomLvl={0}
+                onClick={onPsvClick}
+                onReady={() => {
+                  requestAnimationFrame(() => psvRef.current?.resize({ width: "100%", height: "100%" }));
+                }}
+              />
+            </div>
           ) : (
             <div
               ref={wrapperRef}
@@ -490,6 +518,19 @@ export default function BuyerTourSection() {
         {!isPano && !isZoomed && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-3 py-[5px] border border-[rgba(255,255,255,0.18)] bg-[rgba(0,0,0,0.38)] font-mono text-[9px] tracking-[0.14em] uppercase text-white/70 pointer-events-none">
             Click anywhere to explore
+          </div>
+        )}
+
+        {/* 360° hint — permanent top-left corner */}
+        {isPano && (
+          <div className="absolute top-4 left-4 z-20 flex items-center gap-[7px] px-3 py-[7px] border border-[rgba(255,255,255,0.25)] bg-[rgba(0,0,0,0.55)] pointer-events-none max-sm:top-2 max-sm:left-2 max-sm:px-2 max-sm:py-[5px]">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="shrink-0">
+              <path d="M8 2.5A5.5 5.5 0 1 1 2.5 8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M8 2.5L6 0.5M8 2.5L6 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-mono text-[9px] tracking-[0.14em] uppercase text-white max-sm:text-[8px]">
+              Drag to rotate · Click to zoom
+            </span>
           </div>
         )}
 

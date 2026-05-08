@@ -1,82 +1,64 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 export default function HeroSection() {
-  const [captureMins, setCaptureMins] = useState(0);
-  const [inquiriesX, setInquiriesX] = useState(0);
-  const [noInstallPct, setNoInstallPct] = useState(0);
-
-  useEffect(() => {
-    const duration = 1200;
-    const start = performance.now();
-
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      setCaptureMins(Math.round(15 * progress));
-      setInquiriesX(Math.round(2 * progress));
-      setNoInstallPct(Math.round(100 * progress));
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-
-    requestAnimationFrame(tick);
-  }, []);
-
   return (
-    <section className="relative -mt-24 flex min-h-screen flex-col justify-center overflow-hidden rounded-b-[60px] bg-inverse-surface pb-24 pt-48 shadow-2xl md:pb-32">
+    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-ink px-6 pb-20 pt-[120px] text-center md:px-14">
       {/* Background video */}
       <video
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover object-center"
         src="/hero_video.mp4"
         autoPlay
         loop
         muted
         playsInline
       />
-      {/* Dark overlay so text stays legible */}
-      <div className="absolute inset-0 bg-inverse-surface/50" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
-      <div className="relative z-10 mx-auto max-w-7xl px-6">
-        <div className="mx-auto max-w-4xl space-y-8 text-center">
-          <h1 className="font-display text-[clamp(40px,6vw,72px)] font-bold leading-[1.1] tracking-tight text-white">
-            The 15-minute tour that <span className="text-primary-container">closes the deal.</span>
-          </h1>
-          <p className="mx-auto max-w-2xl text-xl leading-relaxed text-slate-300">
-            Transform any property into a fully immersive, interactive 3D experience with just your smartphone. Designed for real estate professionals who demand
-            precision without the complexity.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 pt-8">
-            <a
-              href="#cta"
-              className="rounded bg-primary px-8 py-3 font-display text-base font-semibold text-on-primary shadow-[0px_4px_20px_rgba(101,0,225,0.4)] transition hover:bg-primary/90"
-            >
-              Join waitlist
-            </a>
-            <a
-              href="#buyer-tour"
-              className="rounded border-[1.5px] border-slate-600 px-8 py-3 font-display text-base font-semibold text-white transition hover:bg-white/5"
-            >
-              View Demo Tour
-            </a>
-          </div>
-          <div className="mt-14 grid grid-cols-2 gap-8 border-t border-slate-800 pt-12 md:grid-cols-4">
-            <div className="text-center">
-              <div className="mb-2 font-display text-3xl font-bold text-white">{captureMins} min</div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Average Capture</div>
+      {/* Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-ink/72 via-ink/60 to-ink/82" />
+      <div
+        className="absolute inset-0"/>
+      <div className="pointer-events-none absolute left-1/2 top-[35%] h-[600px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(124,92,252,0.18)_0%,transparent_65%)]" />
+
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-[820px]">
+        <span className="hero-fade-d1 mb-5 block font-mono text-[10px] uppercase tracking-[0.18em] text-accent-light">
+          Built by a New York agent. For agents like you.
+        </span>
+        <h1 className="hero-fade-d2 font-display text-[clamp(30px,3.6vw,50px)] font-extrabold leading-[1.1] tracking-tight text-white">
+          Your buyer is in Chicago.<br />
+          The listing is in Brooklyn.<br />
+          <span className="text-accent-light">Photos aren&apos;t going to close this.</span>
+        </h1>
+        <p className="hero-fade-d3 mx-auto mt-6 max-w-[560px] text-[17px] leading-[1.75] text-white/50">
+          SynergySo turns a 15-minute phone walkthrough into a shareable, interactive 3D tour your buyers can explore, question, and fall in love with — from anywhere in the world. No hardware. No contractor. No app download on their end.
+        </p>
+        <div className="hero-fade-d4 mt-9 flex flex-wrap justify-center gap-3">
+          <a
+            href="#cta"
+            className="inline-flex items-center gap-1.5 rounded-[7px] bg-accent px-[26px] py-[13px] text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-accent-dark"
+          >
+            Capture Your First Tour Free →
+          </a>
+          <a
+            href="#how-it-works"
+            className="inline-flex items-center gap-1.5 rounded-[7px] border border-white/13 px-[22px] py-3 text-sm font-medium text-white/60 transition hover:border-white/30 hover:text-white"
+          >
+            See How It Works
+          </a>
+        </div>
+
+        {/* Stats strip */}
+        <div className="hero-fade-d5 mt-14 flex flex-wrap justify-center border-t border-white/7 pt-7">
+          {[
+            { val: "15 min", label: "to capture any property" },
+            { val: "Any phone", label: "iPhone or Android" },
+            { val: "Zero friction", label: "buyers click a link — that's it" },
+            { val: "100%", label: "of listings qualify" },
+          ].map(({ val, label }) => (
+            <div key={val} className="border-r border-white/7 px-9 text-center last:border-r-0">
+              <div className="mb-1 text-lg font-bold text-white">{val}</div>
+              <div className="font-mono text-[10px] tracking-[0.05em] text-white/32">{label}</div>
             </div>
-            <div className="text-center">
-              <div className="mb-2 font-display text-3xl font-bold text-white">$0</div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Platform Fees</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-2 font-display text-3xl font-bold text-white">{inquiriesX}x</div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">Inquiries</div>
-            </div>
-            <div className="text-center">
-              <div className="mb-2 font-display text-3xl font-bold text-white">{noInstallPct}%</div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">No Install</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

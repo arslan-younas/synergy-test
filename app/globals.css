@@ -77,6 +77,12 @@
   100% { transform: scale(2.2); opacity: 0;   }
 }
 
+@keyframes fadeHint {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @theme {
   /* Material 3 palette */
   --color-primary: #6500e1;
@@ -139,8 +145,18 @@
 
   --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
-  /* Used by BuyerTourSection.module.css for HUD labels */
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* New dark ink palette */
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #131313;
+  --color-ink-mid: #1c1c1c;
+  --color-light-1: #F8F9FB;
+  --color-light-2: #F2F4F6;
+  --color-accent: #7c5cfc;
+  --color-accent-dark: #5e3fe0;
+  --color-accent-light: #a688ff;
+  --color-accent-green: #22c55e;
 
   --shadow-card-glow:
     0 28px 70px -36px rgba(101, 0, 225, 0.18), 0 0 0 1px rgba(25, 28, 30, 0.06);
@@ -158,6 +174,7 @@
   --animate-hotspot-ring: pring 2.5s infinite;
   --animate-scanline: scan 5s ease-in-out infinite;
   --animate-hs-pulse: hsPulse 1.8s ease-out infinite;
+  --animate-fade-hint: fadeHint 5s ease-in forwards;
 }
 
 html {
