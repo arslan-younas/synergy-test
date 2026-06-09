@@ -1,0 +1,33 @@
+{
+  "name": "syanergy-site",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@photo-sphere-viewer/core": "^5.14.1",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-photo-sphere-viewer": "^6.2.3",
+    "three": "latest"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@tailwindcss/postcss": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/three": "^0.184.0",
+    "autoprefixer": "latest",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  }
+}

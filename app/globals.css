@@ -1,0 +1,240 @@
+@import "tailwindcss";
+@import "@photo-sphere-viewer/core/index.css";
+
+/* Material 3 + motion tokens (Tailwind v4 @tailwindcss/postcss scans this file). */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translate3d(0, 110%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes typDot {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pring {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes scan {
+  0%,
+  100% {
+    transform: translateX(-25%);
+  }
+  50% {
+    transform: translateX(25%);
+  }
+}
+
+@keyframes hsPulse {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+@keyframes fadeHint {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@theme {
+  /* Material 3 palette */
+  --color-primary: #6500e1;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #7f33ff;
+  --color-on-primary-container: #f0e5ff;
+  --color-primary-fixed: #eaddff;
+  --color-primary-fixed-dim: #d2bcff;
+  --color-on-primary-fixed: #24005a;
+  --color-on-primary-fixed-variant: #5900c7;
+  --color-inverse-primary: #d2bcff;
+
+  --color-secondary: #675686;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #ddc8ff;
+  --color-on-secondary-container: #625181;
+  --color-secondary-fixed: #ebdcff;
+  --color-secondary-fixed-dim: #d2bdf4;
+  --color-on-secondary-fixed: #22123e;
+  --color-on-secondary-fixed-variant: #4f3e6c;
+
+  --color-tertiary: #6327c6;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #7c46e0;
+  --color-on-tertiary-container: #f0e5ff;
+  --color-tertiary-fixed: #eaddff;
+  --color-tertiary-fixed-dim: #d2bbff;
+  --color-on-tertiary-fixed: #25005a;
+  --color-on-tertiary-fixed-variant: #5914bc;
+
+  --color-background: #f8f9fb;
+  --color-on-background: #191c1e;
+  --color-surface: #f8f9fb;
+  --color-surface-bright: #f8f9fb;
+  --color-surface-dim: #d9dadc;
+  --color-surface-tint: #7420f4;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #4a4456;
+  --color-surface-variant: #e1e2e4;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #edeef0;
+  --color-surface-container-high: #e7e8ea;
+  --color-surface-container-highest: #e1e2e4;
+
+  --color-outline: #7b7488;
+  --color-outline-variant: #ccc3d9;
+
+  --color-inverse-surface: #2e3132;
+  --color-inverse-on-surface: #f0f1f3;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Layout */
+  --spacing-section-padding: 160px;
+  --spacing-container-max: 1280px;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* New dark ink palette */
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #131313;
+  --color-ink-mid: #1c1c1c;
+  --color-light-1: #F8F9FB;
+  --color-light-2: #F2F4F6;
+  --color-accent: #7c5cfc;
+  --color-accent-dark: #5e3fe0;
+  --color-accent-light: #a688ff;
+  --color-accent-green: #22c55e;
+
+  --shadow-card-glow:
+    0 28px 70px -36px rgba(101, 0, 225, 0.18), 0 0 0 1px rgba(25, 28, 30, 0.06);
+  --shadow-phone: 0 28px 64px -30px rgba(25, 28, 30, 0.18), 0 0 0 1px rgba(101, 0, 225, 0.12);
+  --shadow-browser: 0 30px 72px -34px rgba(25, 28, 30, 0.18);
+
+  --animate-rise: rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pulse-dot: pulseDot 2s infinite;
+  --animate-typ-d1: typDot 1.2s 0s infinite;
+  --animate-typ-d2: typDot 1.2s 0.18s infinite;
+  --animate-typ-d3: typDot 1.2s 0.36s infinite;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-pring: pring 3s infinite;
+  --animate-pring-delay: pring 3s 0.6s infinite;
+  --animate-hotspot-ring: pring 2.5s infinite;
+  --animate-scanline: scan 5s ease-in-out infinite;
+  --animate-hs-pulse: hsPulse 1.8s ease-out infinite;
+  --animate-fade-hint: fadeHint 5s ease-in forwards;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+}
+
+.hero-word-mask {
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.hero-fade-d1 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.1s forwards;
+}
+
+.hero-fade-d2 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1.15s forwards;
+}
+
+.hero-fade-d3 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1.3s forwards;
+}
+
+.hero-fade-d4 {
+  opacity: 0;
+  animation: fadeUp 1s ease 1.5s forwards;
+}
+
+.hero-fade-d5 {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1.8s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .hero-word-mask {
+    overflow: visible !important;
+  }
+  .hero-word-rise,
+  .hero-fade-d1,
+  .hero-fade-d2,
+  .hero-fade-d3,
+  .hero-fade-d4,
+  .hero-fade-d5 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
