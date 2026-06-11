@@ -1,108 +1,115 @@
 import AnimationObservers from "@/components/landing/AnimationObservers";
+import Preloader from "@/components/landing/Preloader";
 import NavBar from "@/components/landing/NavBar";
 import HeroSection from "@/components/landing/HeroSection";
-import FounderBridgeSection from "@/components/landing/FounderBridgeSection";
-import ProblemComparisonSection from "@/components/landing/ProblemComparisonSection";
-import WedgeSection from "@/components/landing/WedgeSection";
+import IntroSection from "@/components/landing/IntroSection";
+import Marquee from "@/components/landing/Marquee";
+import AboutSection from "@/components/landing/AboutSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import WhatBuyerGetsSection from "@/components/landing/WhatBuyerGetsSection";
 import BuyerTourSectionLoader from "@/components/landing/BuyerTourSectionLoader";
-import AILayerSection from "@/components/landing/AILayerSection";
-import InTourCallSection from "@/components/landing/InTourCallSection";
-import RedesignSection from "@/components/landing/RedesignSection";
-import AgentAnalyticsSection from "@/components/landing/AgentAnalyticsSection";
-import MatrixSection from "@/components/landing/MatrixSection";
-import PricingSection from "@/components/landing/PricingSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import FounderSection from "@/components/landing/FounderSection";
-import CTASection from "@/components/landing/CTASection";
+import WhySection from "@/components/landing/WhySection";
+import ContactSection from "@/components/landing/ContactSection";
 
 export default function Home() {
   return (
     <>
-      <div className="relative z-2">
+      <Preloader />
+      <div className="relative">
         <NavBar />
         <main>
           <HeroSection />
-          <FounderBridgeSection />
-          <ProblemComparisonSection />
-          <WedgeSection />
+          <IntroSection />
+          <Marquee />
+          <AboutSection />
           <HowItWorksSection />
-          <BuyerTourSectionLoader />
-          <AILayerSection />
-          <InTourCallSection />
-          <RedesignSection />
-          <AgentAnalyticsSection />
-          <MatrixSection />
-          <PricingSection />
-          <TestimonialsSection />
-          <FounderSection />
-          <CTASection />
-        </main>
+          <WhatBuyerGetsSection />
 
-        <footer className="border-t border-white/7 bg-ink px-6 py-[52px] pb-7 lg:px-14">
-          <div className="mx-auto max-w-[1080px]">
-            <div className="mb-11 grid grid-cols-1 gap-11 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Brand */}
-              <div>
-                <div className="mb-1 text-lg font-extrabold tracking-tight text-white">
-                  Synergy<span className="text-accent-light">So</span>
+          {/* ── Interactive tour wrapper ── */}
+          <section className="border-t border-white/8 bg-[#07070a] px-10 py-16 max-sm:px-5 max-sm:py-10" id="buyer-tour-outer">
+            <div className="mx-auto max-w-[1280px]">
+
+              {/* Section header */}
+              <div className="mb-8 flex flex-wrap items-end justify-between gap-6">
+                <div>
+                  <div className="mb-3 flex items-center gap-3 font-mono text-[12px] uppercase tracking-[0.26em] text-accent-light">
+                    <span className="block h-px w-[30px] bg-accent" />
+                    Live tour
+                  </div>
+                  <h2 className="text-[clamp(22px,3vw,40px)] font-black leading-[1.05] tracking-[-0.04em] text-white">
+                    Walk it yourself.
+                  </h2>
                 </div>
-                <div className="mb-3.5 font-mono text-sm text-white/45">
-                  Every listing, walkable.
-                </div>
-                <p className="max-w-55 text-sm leading-[1.65] text-white/45">
-                  Built by agents, for agents. Starting in New York Metro. Rolling out nationally.
+                <p className="max-w-[44ch] text-[14px] leading-[1.7] text-white/45">
+                  Drag to pan · click to zoom in · click again to reset. Use the room
+                  list to navigate, or ask the AI anything about the space.
                 </p>
               </div>
 
-              {/* Product */}
+              {/* Viewer card — rounded, bordered, overflow-hidden clips the PSV */}
+              <div
+                className="overflow-hidden rounded-2xl border border-white/8"
+                style={{ boxShadow: "0 0 0 1px rgba(123,94,248,.12), 0 40px 80px -30px rgba(123,94,248,.18)" }}
+              >
+                <BuyerTourSectionLoader />
+              </div>
+
+              {/* Caption */}
+              <p className="mt-5 font-mono text-[12px] text-white/28">
+                What your buyer sees — navigable room-to-room, real dimensions, any device, no download.
+              </p>
+            </div>
+          </section>
+
+          <WhySection />
+          <ContactSection />
+        </main>
+
+        <footer className="border-t border-white/8 bg-[#0c0c11] px-10 pb-9 pt-16 max-sm:px-5">
+          <div className="mx-auto max-w-[1280px]">
+            <div className="flex flex-wrap items-start justify-between gap-[30px]">
+              {/* Brand */}
               <div>
-                <div className="mb-3.5 font-mono text-sm uppercase tracking-[0.15em] text-white/45">Product</div>
+                <div className="mb-3 flex items-center gap-[10px]">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="200 60 500 400" height="28" style={{ display: "block", flexShrink: 0 }}>
+                    <circle cx="400" cy="250" r="170" fill="none" stroke="#C89B2B" strokeWidth="24" />
+                    <path d="M400 420 C470 300 560 220 650 220 C610 320 540 400 430 470 Z" fill="none" stroke="#4F8F43" strokeWidth="24" />
+                    <path d="M300 350 C340 300 390 280 440 290 C410 340 370 380 320 400 Z" fill="#67B35A" />
+                    <path d="M470 360 C510 310 560 290 610 300 C580 350 540 390 490 410 Z" fill="#67B35A" />
+                  </svg>
+                  <span className="text-[18px] font-extrabold tracking-[-0.03em] text-white">
+                    Synergy<span className="text-accent-light">So</span>
+                  </span>
+                </div>
+                <p className="max-w-[32ch] font-mono text-[12px] leading-[1.7] text-white/45">
+                  The listing your out-of-town buyer can finally walk. Built by
+                  agents, for agents.
+                </p>
+              </div>
+
+              {/* Links */}
+              <div className="flex flex-wrap gap-[30px]">
                 {[
-                  { label: "How It Works", href: "#how-it-works" },
-                  { label: "Features", href: "#features" },
-                  { label: "Pricing", href: "#pricing" },
-                  { label: "See a Live Tour", href: "#buyer-tour" },
+                  { label: "About",         href: "#about" },
+                  { label: "How It Works",  href: "#how" },
+                  { label: "Why Us",        href: "#why" },
+                  { label: "Contact",       href: "#contact" },
+                  { label: "hello@synergyso.com", href: "mailto:hello@synergyso.com" },
                 ].map(({ label, href }) => (
-                  <a key={label} href={href} className="mb-2 block text-sm text-white/45 transition hover:text-white">
+                  <a
+                    key={label}
+                    href={href}
+                    className="font-mono text-[13px] text-white/45 transition hover:text-white"
+                  >
                     {label}
                   </a>
                 ))}
-              </div>
-
-              {/* Company */}
-              <div>
-                <div className="mb-3.5 font-mono text-sm uppercase tracking-[0.15em] text-white/45">Company</div>
-                {["About", "Blog", "Contact", "Press"].map((label) => (
-                  <a key={label} href="#" className="mb-2 block text-sm text-white/45 transition hover:text-white">
-                    {label}
-                  </a>
-                ))}
-              </div>
-
-              {/* Legal */}
-              <div>
-                <div className="mb-3.5 font-mono text-sm uppercase tracking-[0.15em] text-white/45">Legal</div>
-                {["Privacy Policy", "Terms of Service"].map((label) => (
-                  <a key={label} href="#" className="mb-2 block text-sm text-white/45 transition hover:text-white">
-                    {label}
-                  </a>
-                ))}
-                <div className="mt-[18px] font-mono text-sm text-white/45">hello@synergyso.com</div>
               </div>
             </div>
 
-            <div className="flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-5 sm:flex-row">
-              <span className="font-mono text-sm text-white/45">
-                © 2026 SynergySo. Built by agents, for agents. New York.
-              </span>
-              <div className="flex gap-[18px]">
-                {["Instagram", "LinkedIn", "Twitter"].map((s) => (
-                  <a key={s} href="#" className="font-mono text-sm text-white/45 transition hover:text-white/50">
-                    {s}
-                  </a>
-                ))}
-              </div>
+            <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-[26px]">
+              <span className="font-mono text-[11px] text-white/26">© 2026 SYNERGYSO · NEW YORK</span>
+              <span className="font-mono text-[11px] text-white/26">HELLO@SYNERGYSO.COM</span>
             </div>
           </div>
         </footer>

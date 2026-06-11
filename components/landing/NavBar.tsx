@@ -1,156 +1,76 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-const NAV_ITEMS = [
-  { id: "how-it-works", label: "How It Works" },
-  { id: "features", label: "Features" },
-  { id: "pricing", label: "Pricing" },
+const NAV_LINKS = [
+  { label: "About",        href: "#about" },
+  { label: "How It Works", href: "#how" },
+  { label: "Why Us",       href: "#why" },
+  { label: "Contact",      href: "#contact" },
 ] as const;
 
 export default function NavBar() {
-  const [activeId, setActiveId] = useState<string>("");
   const [scrolled, setScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const items = useMemo(() => NAV_ITEMS, []);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 36);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const sections = items
-      .map((item) => document.getElementById(item.id))
-      .filter((node): node is HTMLElement => node !== null);
-
-    if (!sections.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-        if (!visible.length) return;
-        const nextActive = visible[0].target.id;
-        setActiveId((prev) => (prev === nextActive ? prev : nextActive));
-      },
-      { rootMargin: "-35% 0px -45% 0px", threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-
-    const initialHash = window.location.hash.replace("#", "");
-    if (initialHash && items.some((item) => item.id === initialHash)) {
-      setActiveId(initialHash);
-    } else if (sections[0]) {
-      setActiveId(sections[0].id);
-    }
-
-    return () => observer.disconnect();
-  }, [items]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) setIsMobileMenuOpen(false);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <nav
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-[200] flex h-[70px] items-center justify-between px-10 transition-all duration-300 max-sm:px-5 ${
         scrolled
-          ? "border-b border-white/7 bg-ink/95 backdrop-blur-md"
-          : "bg-transparent"
+          ? "border-b border-white/8 bg-[rgba(7,7,10,0.78)] backdrop-blur-[18px]"
+          : "border-b border-transparent"
       }`}
     >
-      <div className="mx-auto flex h-[60px] w-full items-center justify-between px-6 lg:px-14">
-        {/* Logo */}
-        <a href="#" className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-white">
-          <span>Synergy</span>
-          <span className="text-accent-light">So</span>
-        </a>
+      {/* Logo */}
+      <a href="#" className="flex items-center gap-[10px]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="200 60 500 400" height="32" style={{ display: "block", flexShrink: 0 }}>
+          <circle cx="400" cy="250" r="170" fill="none" stroke="#C89B2B" strokeWidth="24" />
+          <path d="M400 420 C470 300 560 220 650 220 C610 320 540 400 430 470 Z" fill="none" stroke="#4F8F43" strokeWidth="24" />
+          <path d="M300 350 C340 300 390 280 440 290 C410 340 370 380 320 400 Z" fill="#67B35A" />
+          <path d="M470 360 C510 310 560 290 610 300 C580 350 540 390 490 410 Z" fill="#67B35A" />
+        </svg>
+        <span className="text-[18px] font-extrabold tracking-[-0.03em] text-white">
+          Synergy<span className="text-accent-light">So</span>
+        </span>
+      </a>
 
-        {/* Desktop links */}
-        <div className="hidden items-center gap-7 md:flex">
-          {items.map((item) => {
-            const isActive = activeId === item.id;
-            return (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                aria-current={isActive ? "true" : undefined}
-                className={`text-[13px] font-medium transition-colors duration-150 ${
-                  isActive ? "text-white" : "text-white/50 hover:text-white"
-                }`}
-              >
-                {item.label}
-              </a>
-            );
-          })}
-        </div>
-
-        {/* Desktop CTA */}
-        <div className="hidden md:flex">
+      {/* Desktop links */}
+      <div className="hidden items-center gap-[34px] md:flex">
+        {NAV_LINKS.map(({ label, href }) => (
           <a
-            href="#cta"
-            className="rounded-md bg-accent px-5 py-[9px] text-[13px] font-semibold text-white transition hover:bg-accent-dark"
+            key={label}
+            href={href}
+            className="font-mono text-[12px] tracking-[0.04em] text-white/45 transition-colors duration-150 hover:text-white"
           >
-            Capture Your First Tour Free
+            {label}
           </a>
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          type="button"
-          aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={isMobileMenuOpen}
-          className="rounded p-2 text-white/70 transition hover:text-white md:hidden"
-          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-        >
-          {isMobileMenuOpen ? (
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M6 18L18 6" />
-            </svg>
-          ) : (
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
+        ))}
       </div>
 
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <div className="border-t border-white/7 bg-ink-soft px-6 pb-5 pt-4 md:hidden">
-          <div className="flex flex-col gap-4">
-            {items.map((item) => (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-sm font-medium text-white/70 transition hover:text-white"
-              >
-                {item.label}
-              </a>
-            ))}
-            <div className="mt-2 border-t border-white/7 pt-4">
-              <a
-                href="#cta"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="inline-flex rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-white"
-              >
-                Capture Your First Tour Free
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Desktop CTA */}
+      <a
+        href="#contact"
+        className="hidden rounded-full border border-white/8 px-[18px] py-[10px] font-mono text-[12px] tracking-[0.04em] text-white transition hover:border-accent hover:bg-accent/12 md:inline-block"
+      >
+        Get in Touch
+      </a>
+
+      {/* Mobile links (simple inline) */}
+      <div className="flex items-center gap-5 md:hidden">
+        {NAV_LINKS.slice(0, 2).map(({ label, href }) => (
+          <a key={label} href={href} className="font-mono text-[11px] text-white/45 hover:text-white">
+            {label}
+          </a>
+        ))}
+        <a href="#contact" className="rounded-full border border-white/8 px-3 py-1.5 font-mono text-[11px] text-white">
+          Contact
+        </a>
+      </div>
     </nav>
   );
 }
