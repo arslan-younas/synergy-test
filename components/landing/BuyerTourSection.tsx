@@ -379,9 +379,9 @@ export default function BuyerTourSection() {
   }, []);
 
   return (
-    <section className="w-screen ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] py-10 max-[980px]:py-6 max-sm:py-0 relative" id="buyer-tour">
+    <section className="relative" id="buyer-tour">
       <div
-        className="relative overflow-hidden h-[clamp(260px,50vw,720px)] border-t border-b border-[rgba(20,17,13,0.12)] bg-[#1a1613]"
+        className="relative overflow-hidden h-[clamp(300px,50vw,720px)] bg-[#1a1613]"
         ref={rootRef}
         style={{ cursor: isPano ? "default" : isZoomed ? (dragging.current ? "grabbing" : "grab") : "zoom-in" }}
         onClick={!isPano ? onImageClick : undefined}
@@ -450,7 +450,7 @@ export default function BuyerTourSection() {
                     )}
 
                     <div
-                      className={`absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 whitespace-nowrap border px-[7px] py-[3px] text-[10px] tracking-[0.08em] font-mono pointer-events-auto cursor-pointer transition-colors duration-150 ${isActive ? "bg-[#14110d] text-[#f3efe7] border-[#14110d]" : "border-[rgba(20,17,13,0.16)] bg-[rgba(255,255,255,0.94)] hover:bg-[#14110d] hover:text-[#f3efe7]"}`}
+                      className={`absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 whitespace-nowrap border px-[7px] py-[3px] text-[10px] tracking-[0.08em] font-mono pointer-events-auto cursor-pointer transition-colors duration-150 ${isActive ? "bg-[#14110d] text-[#f3efe7] border-[#14110d]" : "border-[rgba(20,17,13,0.16)] bg-[rgba(255,255,255,0.94)] text-[#14110d] hover:bg-[#14110d] hover:text-[#f3efe7]"}`}
                       onClick={(e) => { e.stopPropagation(); handleHotspotClick(id, hs.px, hs.py, hs.ai); }}
                     >
                       {hs.label}
@@ -509,7 +509,7 @@ export default function BuyerTourSection() {
 
         {/* Zoom badge — only for flat viewer */}
         {isZoomed && (
-          <div className="absolute top-3 left-[58px] z-20 px-[7px] py-1 border border-[rgba(20,17,13,0.16)] bg-[rgba(255,255,255,0.9)] font-mono text-[10px] tracking-[0.1em] pointer-events-none">
+          <div className="absolute top-3 left-[58px] z-20 px-[7px] py-1 border border-[rgba(20,17,13,0.16)] bg-[rgba(255,255,255,0.9)] text-[#14110d] font-mono text-[10px] tracking-[0.1em] pointer-events-none">
             {Math.round(zoomLabel * 100)}%
           </div>
         )}
@@ -548,7 +548,7 @@ export default function BuyerTourSection() {
               type="button"
             >×</button>
           </div>
-          <span>{floatAnswer.text}</span>
+          <span className="text-[#14110d]">{floatAnswer.text}</span>
         </div>
 
         <BuyerTourHUD

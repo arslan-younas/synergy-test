@@ -1,42 +1,36 @@
-const items = [
-  ["Brooklyn", "NY"],
-  ["Manhattan", "NY"],
-  ["Miami", "FL"],
-  ["Los Angeles", "CA"],
-  ["Austin", "TX"],
-  ["Chicago", "IL"],
-  ["Seattle", "WA"],
-  ["Boston", "MA"],
-  ["Denver", "CO"],
-  ["Nashville", "TN"],
-];
+const ITEMS = [
+  "Walk the listing from anywhere",
+  "True 3D, not 360° photos",
+  "Published before you leave",
+] as const;
 
-function Row({ loop }: { loop: typeof items }) {
+function Track() {
   return (
     <>
-      {loop.map(([city, st], i) => (
-        <div
-          key={`${city}-${st}-${i}`}
-          className="flex shrink-0 items-center gap-12 whitespace-nowrap font-display text-xl font-normal tracking-tight text-on-surface-variant"
+      {ITEMS.map((text) => (
+        <span
+          key={text}
+          className="font-mono text-[clamp(20px,3vw,40px)] font-bold uppercase tracking-[-0.02em] text-white/16"
         >
-          <span>
-            {city}, <em className="italic text-primary">{st}</em>
-          </span>
-          <span className="text-[10px] text-primary">✦</span>
-        </div>
+          {text}&nbsp;<b className="text-accent">·</b>&nbsp;
+        </span>
       ))}
     </>
   );
 }
 
 export default function Marquee() {
-  /* Two identical runs so translateX(-50%) loops seamlessly */
-  const loop = items;
   return (
-    <div className="relative overflow-hidden border-y border-outline-variant/30 bg-surface-container-lowest py-6 backdrop-blur-md">
-      <div className="flex w-max flex-nowrap animate-marquee">
-        <Row loop={loop} />
-        <Row loop={loop} />
+    <div
+      className="overflow-hidden whitespace-nowrap border-y border-white/8 bg-[#0c0c11] py-[30px]"
+      aria-hidden="true"
+    >
+      <div
+        className="inline-flex gap-12"
+        style={{ animation: "scrollX 26s linear infinite", willChange: "transform" }}
+      >
+        <Track />
+        <Track />
       </div>
     </div>
   );

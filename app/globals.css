@@ -182,7 +182,7 @@ html {
 }
 
 body {
-  background-color: var(--color-background);
+  background-color: #07070a;
 }
 
 .hero-word-mask {
@@ -236,5 +236,55 @@ body {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/* ── Scroll reveal ── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s cubic-bezier(0.2, 0.6, 0.2, 1),
+    transform 0.9s cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+[data-reveal][data-inview="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Green pulse dot ── */
+@keyframes green-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(103, 179, 90, 0.45); }
+  70%  { box-shadow: 0 0 0 9px rgba(103, 179, 90, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(103, 179, 90, 0); }
+}
+.pulse-green {
+  animation: green-pulse 2.4s infinite;
+}
+
+/* ── Marquee scroll ── */
+@keyframes scrollX {
+  to { transform: translateX(-50%); }
+}
+
+/* ── Scroll cue line drop ── */
+@keyframes cue-drop {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  45%  { transform: scaleY(1); transform-origin: top; }
+  55%  { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+.animate-cue-drop {
+  animation: cue-drop 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .pulse-green,
+  .animate-cue-drop {
+    animation: none !important;
   }
 }

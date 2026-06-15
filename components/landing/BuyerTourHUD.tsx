@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, MoveHorizontal } from "lucide-react";
 import type { Room } from "./buyerTour.types";
 
 interface BuyerTourHUDProps {
@@ -41,8 +42,8 @@ export default function BuyerTourHUD({
           <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-[#6b6354] mb-1 max-sm:text-[8px]">
             Room {String(currentRoomIdx + 1).padStart(2, "0")} / {String(rooms.length).padStart(2, "0")}
           </div>
-          <div className="text-[44px] leading-[0.95] text-[#14110d] max-[980px]:text-[30px] max-sm:text-[20px] max-sm:leading-none">
-            The <em className="text-[#c8651a] italic">{currentRoom.italic}</em>
+          <div className="font-display text-[44px] leading-[0.95] text-[#14110d] max-[980px]:text-[30px] max-sm:text-[20px] max-sm:leading-none">
+            The <em className="not-italic text-[#c8651a]">{currentRoom.italic}</em>
           </div>
           <div className="mt-[6px] font-mono text-[10px] tracking-[0.06em] text-[#3a342a] max-sm:text-[8px] max-sm:tracking-[0.04em]">
             {currentRoom.bounds.w}&apos; × {currentRoom.bounds.d}&apos; · {currentRoom.ceiling}&apos; ceilings ·{" "}
@@ -71,26 +72,26 @@ export default function BuyerTourHUD({
 
       <div className="absolute left-1/2 bottom-5 -translate-x-1/2 z-[16] flex gap-2 p-[7px] border border-[rgba(20,17,13,0.18)] bg-[rgba(255,255,255,0.92)] max-[980px]:flex-nowrap max-[980px]:gap-[6px] max-sm:gap-1 max-sm:p-1">
         <button
-          className={`border border-[rgba(20,17,13,0.16)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] cursor-pointer max-sm:px-2 max-sm:py-[5px] max-sm:text-[9px] max-sm:tracking-[0.1em] ${panMode ? "bg-[#14110d] text-[#f3efe7]" : "bg-transparent text-[#14110d]"}`}
+          className={`inline-flex items-center gap-1.5 border border-[rgba(20,17,13,0.16)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] cursor-pointer max-sm:px-2 max-sm:py-[5px] max-sm:text-[9px] max-sm:tracking-[0.1em] ${panMode ? "bg-[#14110d] text-[#f3efe7]" : "bg-transparent text-[#14110d]"}`}
           onClick={onPanToggle}
           type="button"
         >
-          ↔ Pan
+          <MoveHorizontal className="h-3 w-3" strokeWidth={2} /> Pan
         </button>
         <button
-          className="border border-[rgba(20,17,13,0.16)] bg-transparent text-[#14110d] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] cursor-pointer max-sm:px-2 max-sm:py-[5px] max-sm:text-[9px] max-sm:tracking-[0.1em]"
+          className="inline-flex items-center gap-1 border border-[rgba(20,17,13,0.16)] bg-transparent text-[#14110d] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] cursor-pointer max-sm:px-2 max-sm:py-[5px] max-sm:text-[9px] max-sm:tracking-[0.1em]"
           onClick={onPrev}
           type="button"
-        >← Prev</button>
+        ><ChevronLeft className="h-3 w-3" strokeWidth={2.5} /> Prev</button>
         <button
-          className="border border-[rgba(20,17,13,0.16)] bg-transparent text-[#14110d] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] cursor-pointer max-sm:px-2 max-sm:py-[5px] max-sm:text-[9px] max-sm:tracking-[0.1em]"
+          className="inline-flex items-center gap-1 border border-[rgba(20,17,13,0.16)] bg-transparent text-[#14110d] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] cursor-pointer max-sm:px-2 max-sm:py-[5px] max-sm:text-[9px] max-sm:tracking-[0.1em]"
           onClick={onNext}
           type="button"
-        >Next →</button>
+        >Next <ChevronRight className="h-3 w-3" strokeWidth={2.5} /></button>
       </div>
 
       <button
-        className={`absolute right-7 bottom-[22px] z-[16] h-[46px] rounded-full border border-[rgba(20,17,13,0.24)] px-[14px] inline-flex items-center gap-[10px] cursor-pointer max-[980px]:right-4 max-sm:bottom-2 max-sm:right-2 max-sm:h-9 max-sm:px-[10px] ${aiOpen ? "bg-[#14110d] text-[#f3efe7]" : "bg-[rgba(255,255,255,0.94)]"}`}
+        className={`absolute right-7 bottom-[22px] z-[16] h-[46px] rounded-full border border-[rgba(20,17,13,0.24)] px-[14px] inline-flex items-center gap-[10px] cursor-pointer max-[980px]:right-4 max-sm:bottom-2 max-sm:right-2 max-sm:h-9 max-sm:px-[10px] ${aiOpen ? "bg-[#14110d] text-[#f3efe7]" : "bg-[rgba(255,255,255,0.94)] text-[#14110d]"}`}
         onClick={onAiToggle}
         type="button"
       >
